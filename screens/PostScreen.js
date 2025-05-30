@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Image, Vibration } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   faArrowLeft,
@@ -25,9 +25,18 @@ import styles from '../styles/PostScreenStyles';
 // Màn hình chi tiết bài viết, cho phép like, comment, hiển thị thông tin bài viết
 
 export default function PostScreen({ route, navigation }) {
-  // Giả lập postId và userId, bạn nên lấy từ route.params hoặc context thực tế
+  // Lấy postId từ route.params
   const postId = route?.params?.postId || 'testPostId';
-  const userId = 'testUserId';
+  // Lấy userId từ Firebase Auth
+  const [userId, setUserId] = useState('');
+  
+  // Lấy thông tin người dùng hiện tại khi component mount
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setUserId(user.uid);
+    }
+  }, []);
 
   const [commentText, setCommentText] = useState('');
   const [likes, setLikes] = useState([]);
@@ -48,31 +57,68 @@ export default function PostScreen({ route, navigation }) {
 
   // Gọi khi bấm Like
   const handleLike = async () => {
-    await addLike(postId, userId);
-    fetchLikes();
+    try {
+      if (!userId) {
+        Alert.alert('Lỗi', 'Bạn cần đăng nhập để thích bài viết!');
+        return;
+      }
+      await addLike(postId, userId);
+      fetchLikes();
+      // Rung nhẹ khi like thành công
+      Vibration.vibrate(100);
+    } catch (error) {
+      console.error("Error liking post:", error);
+      Alert.alert('Lỗi', 'Không thể thích bài viết. Vui lòng thử lại sau.');
+    }
   };
 
   // Gọi khi gửi comment
   const handleComment = async () => {
-    if (!commentText.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập nội dung bình luận!');
-      return;
+    try {
+      if (!commentText.trim()) {
+        Alert.alert('Lỗi', 'Vui lòng nhập nội dung bình luận!');
+        return;
+      }
+      
+      if (!userId) {
+        Alert.alert('Lỗi', 'Bạn cần đăng nhập để bình luận!');
+        return;
+      }
+      
+      // Lấy thông tin người dùng hiện tại
+      const user = auth.currentUser;
+      
+      await addComment(postId, { 
+        userId, 
+        text: commentText,
+        displayName: user?.displayName || 'Người dùng ByteX',
+        avatar: user?.photoURL || null,
+        createdAt: Date.now()
+      });
+      
+      setCommentText('');
+      fetchComments();
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      Alert.alert('Lỗi', 'Không thể thêm bình luận. Vui lòng thử lại sau.');
     }
-    await addComment(postId, { userId, text: commentText });
-    setCommentText('');
-    fetchComments();
   };
 
   // Chọn ảnh từ thư viện
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: [ImagePicker.MediaType.IMAGE],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImage(result.assets[0].uri);
+    try {
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Lỗi", "Không thể chọn ảnh. Vui lòng thử lại sau.");
     }
   };
 

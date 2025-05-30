@@ -120,17 +120,40 @@ export function listenLikes(postId, callback, errorCallback) {
 // Thêm comment vào post
 export async function addComment(postId, comment) {
   try {
-    const commentRef = collection(db, 'posts', postId, 'comments');
-    await addDoc(commentRef, { 
-      ...comment, 
-      createdAt: Date.now() 
-    });
+    // Kiểm tra xem postId có hợp lệ không
+    if (!postId || postId === 'testPostId') {
+      console.error("Invalid postId:", postId);
+      throw new Error("ID bài viết không hợp lệ");
+    }
     
-    // Cập nhật số lượng comment trong document post
-    const postRef = doc(db, 'posts', postId);
-    await updateDoc(postRef, {
-      comments: increment(1)
-    });
+    // Kiểm tra xem comment có đầy đủ thông tin không
+    if (!comment || !comment.userId || !comment.text) {
+      console.error("Invalid comment data:", comment);
+      throw new Error("Dữ liệu bình luận không hợp lệ");
+    }
+    
+    // Thêm comment vào collection comments của post
+    const commentRef = collection(db, 'posts', postId, 'comments');
+    const commentData = { 
+      ...comment,
+      createdAt: comment.createdAt || Date.now()
+    };
+    
+    const docRef = await addDoc(commentRef, commentData);
+    console.log("Comment added with ID:", docRef.id);
+    
+    try {
+      // Cập nhật số lượng comment trong document post
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        comments: increment(1)
+      });
+    } catch (updateError) {
+      console.error("Error updating comment count:", updateError);
+      // Không throw lỗi ở đây vì comment đã được thêm thành công
+    }
+    
+    return docRef.id;
   } catch (error) {
     console.error("Error adding comment:", error);
     throw error;

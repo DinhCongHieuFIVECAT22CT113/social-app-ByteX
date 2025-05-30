@@ -20,6 +20,19 @@ import {
 // Thêm like vào một bài viết
 export async function likePost(postId, userId) {
   try {
+    // Kiểm tra xem postId và userId có hợp lệ không
+    if (!postId || postId === 'testPostId') {
+      console.error("Invalid postId:", postId);
+      throw new Error("ID bài viết không hợp lệ");
+    }
+    
+    if (!userId) {
+      console.error("Invalid userId:", userId);
+      throw new Error("ID người dùng không hợp lệ");
+    }
+    
+    console.log(`Attempting to like post: ${postId} by user: ${userId}`);
+    
     // Kiểm tra xem người dùng đã like bài viết này chưa
     const likesRef = collection(db, 'posts', postId, 'likes');
     const q = query(likesRef, where('userId', '==', userId));
@@ -27,21 +40,30 @@ export async function likePost(postId, userId) {
     
     // Nếu chưa like, thêm like mới
     if (snapshot.empty) {
-      await addDoc(likesRef, { 
+      const likeData = { 
         userId, 
         createdAt: Date.now() 
-      });
+      };
       
-      // Cập nhật số lượng like trong document post
-      const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        likes: increment(1)
-      });
+      const docRef = await addDoc(likesRef, likeData);
+      console.log("Like added with ID:", docRef.id);
+      
+      try {
+        // Cập nhật số lượng like trong document post
+        const postRef = doc(db, 'posts', postId);
+        await updateDoc(postRef, {
+          likes: increment(1)
+        });
+      } catch (updateError) {
+        console.error("Error updating like count:", updateError);
+        // Không throw lỗi ở đây vì like đã được thêm thành công
+      }
       
       return true;
+    } else {
+      console.log("User already liked this post");
+      return false;
     }
-    
-    return false;
   } catch (error) {
     console.error("Error liking post:", error);
     throw error;

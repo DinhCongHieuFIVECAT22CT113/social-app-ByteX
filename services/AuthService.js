@@ -95,27 +95,36 @@ export const handleLogout = async (navigation) => {
 // 3. Cập nhật avatar trên Auth và Firestore
 // =======================
 async function handleChangeAvatar() {
-  // 1. Chọn ảnh từ thư viện
-  const result = await ImagePicker.launchImageLibraryAsync({ 
-    mediaTypes: [ImagePicker.MediaType.IMAGE],
-    allowsEditing: true,
-    aspect: [1, 1],
-    quality: 0.8,
-  });
-  // Nếu người dùng hủy bỏ, thoát hàm
-  if (result.canceled || !result.assets || result.assets.length === 0) return;
+  try {
+    // 1. Chọn ảnh từ thư viện
+    const result = await ImagePicker.launchImageLibraryAsync({ 
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    
+    // Nếu người dùng hủy bỏ, thoát hàm
+    if (result.canceled || !result.assets || result.assets.length === 0) return;
+    
+    const uri = result.assets[0].uri; // Expo SDK 48+
+    
+    // SỬA: Luôn dùng biến auth đã khởi tạo từ firebaseConfig thay vì tạo mới bằng getAuth(app)
+    const user = auth.currentUser;
+    if (!user) throw new Error('No user logged in');
 
-  const uri = result.assets[0].uri; // Expo SDK 48+
-  // SỬA: Luôn dùng biến auth đã khởi tạo từ firebaseConfig thay vì tạo mới bằng getAuth(app)
-  const user = auth.currentUser;
-  if (!user) throw new Error('No user logged in');
+    // 2. Upload ảnh lên Storage
+    const photoURL = await uploadImageAsync(uri, `avatars/${user.uid}.jpg`);
 
-  // 2. Upload ảnh lên Storage
-  const photoURL = await uploadImageAsync(uri, `avatars/${user.uid}.jpg`);
-
-  // 3. Cập nhật avatar trên Auth và Firestore
-  await updateUserProfile({ displayName: user.displayName, photoURL });
-  await updateUserFirestore(user.uid, { avatar: photoURL });
+    // 3. Cập nhật avatar trên Auth và Firestore
+    await updateUserProfile({ displayName: user.displayName, photoURL });
+    await updateUserFirestore(user.uid, { avatar: photoURL });
+    
+    return photoURL;
+  } catch (error) {
+    console.error("Error changing avatar:", error);
+    throw error;
+  }
 }
 
 // =======================

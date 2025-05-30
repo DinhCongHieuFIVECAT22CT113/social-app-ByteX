@@ -69,7 +69,7 @@ export default function UpdateUserScreen({ navigation, route }) {
       }
       
       let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: [ImagePicker.MediaType.IMAGE],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8, // Reduced quality for better performance

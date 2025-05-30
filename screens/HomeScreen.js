@@ -182,11 +182,19 @@ export default function HomeScreen() {
 
   const renderItem = ({ item }) => {
     // Xử lý trường hợp item không có dữ liệu đầy đủ
-    const postAuthor = item.author || item.displayName || 'Người dùng ByteX';
+    const postAuthor = item.displayName || item.author || 'Người dùng ByteX';
     const postAvatar = item.avatar || item.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg';
     const postContent = item.content || item.caption || '';
     const postImage = item.image || '';
     const postTime = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
+    
+    // Log để debug
+    console.log("Rendering post:", { 
+      id: item.id,
+      author: item.author,
+      displayName: item.displayName,
+      userId: item.userId
+    });
     
     return (
       <TouchableOpacity 
