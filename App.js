@@ -1,3 +1,6 @@
+// App.js
+// Điểm khởi đầu của ứng dụng, cấu hình navigation và các màn hình chính
+
 import React from 'react';
 import AppNavigator from './navigation/navigation';
 import UpdateUserScreen from './screens/UpdateUserScreen';

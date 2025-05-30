@@ -10,6 +10,9 @@ const StyledTextInput = styled(TextInput);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledImage = styled(Image);
 
+// LoginScreen.js
+// Màn hình đăng nhập tài khoản người dùng
+
 export default function ByteXLogin() {
   const [username, setUsername] = useState('abc123');
   const [password, setPassword] = useState('');

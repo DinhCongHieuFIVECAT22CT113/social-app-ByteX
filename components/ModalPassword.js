@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, Text, useColorScheme } from 'react-native';
 
+// ModalPassword.js
+// Modal xác nhận mật khẩu mới
+
 const ConfirmPasswordScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';

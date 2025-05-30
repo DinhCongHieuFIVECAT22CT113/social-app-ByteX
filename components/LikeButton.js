@@ -1,3 +1,6 @@
+// LikeButton.js
+// Nút Like, có hiệu ứng rung khi nhấn (dành cho web, ví dụ minh họa)
+
 import React from 'react';
 
 function LikeButton() {

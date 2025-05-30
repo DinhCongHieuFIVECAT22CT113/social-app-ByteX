@@ -4,6 +4,9 @@ import { styled } from 'nativewind';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faChevronRight, faCommentAlt } from '@fortawesome/free-solid-svg-icons';
 
+// ProfileScreen.js
+// Màn hình trang cá nhân người dùng, hiển thị thông tin, ảnh, follower, following
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledImage = styled(Image);

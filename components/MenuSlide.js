@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, useColorScheme } from 'react-native';
 
+// MenuSlide.js
+// Menu trượt hiển thị các mục tài khoản, thông báo, yêu thích
+
 const App = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';

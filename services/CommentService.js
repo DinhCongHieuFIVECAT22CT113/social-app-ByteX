@@ -1,6 +1,8 @@
 import { db } from '../config/firebaseConfig';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
 
+// Dịch vụ xử lý comment và like cho bài viết (Firestore)
+
 // Thêm like vào post
 export async function addLike(postId, userId) {
   const likeRef = collection(db, 'posts', postId, 'likes');

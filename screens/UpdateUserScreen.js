@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, TextInput, Button, Image, TouchableOpacity, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
+// UpdateUserScreen.js
+// Màn hình cập nhật thông tin cá nhân (displayName, bio, avatar)
+
 export default function UpdateUserScreen({ navigation, route }) {
   const { user, onUpdate } = route.params;
   const [displayName, setDisplayName] = useState(user.displayName);

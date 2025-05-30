@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@fortawesome/free-regular-svg-icons": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-native-fontawesome": "^0.3.2",
     "@hookform/resolvers": "^5.0.1",
@@ -28,20 +29,20 @@
     "expo-status-bar": "~2.2.3",
     "firebase": "^11.8.1",
     "lucide-react-native": "^0.511.0",
+    "nativewind": "^4.1.23",
     "react": "19.0.0",
     "react-hook-form": "^7.56.4",
     "react-native": "0.79.2",
     "react-native-gesture-handler": "~2.24.0",
-    "react-native-safe-area-context": "^5.4.0",
+    "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-svg": "15.11.2",
     "react-navigation": "^5.0.0",
     "yup": "^1.6.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.27.3",
-    "babel-preset-expo": "~13.0.0",
-    "nativewind": "^4.1.23"
+    "babel-preset-expo": "^13.1.11",
+    "expo-cli": "^6.3.12"
   },
   "private": true
 }

@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Text, Switch, TouchableOpacity } from 'react-native';
 import { TailwindProvider } from 'nativewind';
 
+// MenuFunction.js
+// Menu chức năng: danh sách bài đăng, thay avatar, chuyển chế độ sáng/tối, đăng xuất
+
 const App = () => {
   const [isDarkMode, setIsDarkMode] = React.useState(false);
 

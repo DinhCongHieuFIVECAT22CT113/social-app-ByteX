@@ -6,8 +6,11 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import PostScreen from '../screens/PostScreen';
-  import CommentsScreen from '../screens/CommentsScreen';
+import CommentsScreen from '../screens/CommentsScreen';
 import ProfileScreen from '../screens/ProfileScreen'; // Thêm dòng này
+
+// navigation.js
+// Cấu hình navigation cho các màn hình chính của app bằng React Navigation
 
 const Stack = createNativeStackNavigator();
 

@@ -16,6 +16,9 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { addLike, getLikes, addComment, getComments } from '../services/CommentService';
 
+// PostScreen.js
+// Màn hình chi tiết bài viết, cho phép like, comment, hiển thị thông tin bài viết
+
 export default function PostScreen({ route }) {
   // Giả lập postId và userId, bạn nên lấy từ route.params hoặc context thực tế
   const postId = route?.params?.postId || 'testPostId';

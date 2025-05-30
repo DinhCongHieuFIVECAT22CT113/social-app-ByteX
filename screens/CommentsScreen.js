@@ -4,6 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faClock, faHeart as faHeartSolid, faCommentAlt, faShareAlt } from '@fortawesome/free-solid-svg-icons';
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
 
+// CommentsScreen.js
+// Màn hình hiển thị chi tiết comment, like, share cho một bài viết
+
 export default function Post() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';

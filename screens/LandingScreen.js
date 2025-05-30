@@ -1,6 +1,9 @@
 import React from 'react';
 import { Text, View, TouchableOpacity, Image, useColorScheme } from 'react-native';
 
+// LandingScreen.js
+// Màn hình chào mừng/giới thiệu ứng dụng ByteX
+
 const App = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';

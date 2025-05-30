@@ -6,6 +6,9 @@ import {
 import { styled } from 'nativewind';
 import { getPostsPaginated } from '../services/PostService';
 
+// HomeScreen.js
+// Màn hình chính hiển thị danh sách bài viết (news feed), hỗ trợ phân trang, dark mode
+
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledImage = styled(Image);

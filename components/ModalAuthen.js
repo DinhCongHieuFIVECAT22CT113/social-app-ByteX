@@ -41,4 +41,7 @@ const VerifyEmailScreen = () => {
 
 export default VerifyEmailScreen;
 
+// ModalAuthen.js
+// Modal xác thực email (gửi mã xác nhận)
+
 

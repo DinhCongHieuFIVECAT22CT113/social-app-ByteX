@@ -1,4 +1,5 @@
 // firebaseConfig.js
+// Cấu hình và khởi tạo Firebase cho toàn bộ app
 
 // Import các hàm cần thiết từ Firebase SDK
 import { initializeApp } from "firebase/app";

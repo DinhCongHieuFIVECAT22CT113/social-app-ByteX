@@ -9,6 +9,9 @@ const StyledTextInput = styled(TextInput);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 const StyledImage = styled(Image);
 
+// RegisterScreen.js
+// Màn hình đăng ký tài khoản người dùng mới
+
 export default function ByteXRegister() {
   const [username, setUsername] = useState('abc123');
   const [email, setEmail] = useState('info@yourmail.com');
