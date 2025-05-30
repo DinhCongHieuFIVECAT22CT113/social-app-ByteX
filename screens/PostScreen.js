@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   faArrowLeft,
@@ -11,9 +11,54 @@ import {
   faMapMarkerAlt,
   faVideo,
   faTh,
+  faThumbsUp,
+  faCommentDots,
 } from '@fortawesome/free-solid-svg-icons';
+import { addLike, getLikes, addComment, getComments } from '../services/CommentService';
 
-export default function CreatePost() {
+export default function PostScreen({ route }) {
+  // Giả lập postId và userId, bạn nên lấy từ route.params hoặc context thực tế
+  const postId = route?.params?.postId || 'testPostId';
+  const userId = 'testUserId';
+
+  const [commentText, setCommentText] = useState('');
+  const [likes, setLikes] = useState([]);
+  const [comments, setComments] = useState([]);
+
+  // Lấy danh sách like/comment khi cần
+  const fetchLikes = async () => {
+    const data = await getLikes(postId);
+    setLikes(data);
+  };
+
+  const fetchComments = async () => {
+    const data = await getComments(postId);
+    setComments(data);
+  };
+
+  // Gọi khi bấm Like
+  const handleLike = async () => {
+    await addLike(postId, userId);
+    fetchLikes();
+  };
+
+  // Gọi khi gửi comment
+  const handleComment = async () => {
+    if (!commentText.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập nội dung bình luận!');
+      return;
+    }
+    await addComment(postId, { userId, text: commentText });
+    setCommentText('');
+    fetchComments();
+  };
+
+  // Có thể fetch dữ liệu khi mount component (tùy ý)
+  React.useEffect(() => {
+    fetchLikes();
+    fetchComments();
+  }, []);
+
   return (
     <ScrollView className="bg-white flex-1 p-4">
       {/* Header */}
@@ -56,7 +101,7 @@ export default function CreatePost() {
       <View className="border-b border-black border-opacity-30 mb-4" />
 
       {/* Buttons group */}
-      <View className="space-y-3 max-w-max">
+      <View className="space-y-3 max-w-max mb-6">
         <TouchableOpacity className="flex-row items-center bg-green-500 rounded-full px-4 py-2">
           <FontAwesomeIcon icon={faCamera} size={14} color="white" />
           <Text className="text-white text-xs font-semibold ml-2">Ảnh/Video</Text>
@@ -85,6 +130,39 @@ export default function CreatePost() {
           <FontAwesomeIcon icon={faCamera} size={14} color="white" />
           <Text className="text-white text-xs font-semibold ml-2">Camera</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Like & Comment section */}
+      <View className="flex-row items-center mb-2">
+        <TouchableOpacity onPress={handleLike} className="flex-row items-center mr-4">
+          <FontAwesomeIcon icon={faThumbsUp} size={18} color="#2563eb" />
+          <Text className="ml-1 text-blue-600">{likes.length} Like</Text>
+        </TouchableOpacity>
+        <FontAwesomeIcon icon={faCommentDots} size={18} color="#22c55e" />
+        <Text className="ml-1 text-green-600">{comments.length} Comment</Text>
+      </View>
+
+      {/* Comment input */}
+      <View className="flex-row items-center mb-4">
+        <TextInput
+          value={commentText}
+          onChangeText={setCommentText}
+          placeholder="Nhập bình luận..."
+          className="flex-1 border px-2 py-1 rounded"
+        />
+        <TouchableOpacity onPress={handleComment} className="ml-2 bg-green-500 px-4 py-2 rounded-full">
+          <Text className="text-white">Gửi</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Danh sách comment */}
+      <View>
+        {comments.map((cmt, idx) => (
+          <View key={idx} className="mb-2 p-2 bg-gray-100 rounded">
+            <Text className="font-semibold">{cmt.userId}</Text>
+            <Text>{cmt.text}</Text>
+          </View>
+        ))}
       </View>
     </ScrollView>
   );
