@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, useColorScheme } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { register, login } from '../services/AuthService';
+import { useNavigation } from '@react-navigation/native';
 import styles from '../styles/LoginScreenStyles';
 
 // LoginScreen.js
@@ -10,8 +12,22 @@ import styles from '../styles/LoginScreenStyles';
 export default function ByteXLogin() {
   const [username, setUsername] = useState('abc123');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+
+  const handleLogin = async () => {
+    setError('');
+    try {
+      // Đăng nhập bằng email và password
+      await login(email, password);
+      navigation.replace('Home');
+    } catch (e) {
+      setError('Sai email hoặc mật khẩu!');
+    }
+  };
 
   return (
     <ScrollView
@@ -23,25 +39,29 @@ export default function ByteXLogin() {
           accessibilityLabel="Back"
           style={styles.backBtn}
           activeOpacity={0.7}
+          onPress={() => navigation.goBack()}
         >
           <FontAwesomeIcon icon={faArrowLeft} size={20} color="white" />
         </TouchableOpacity>
-        <View style={styles.logoRow}>
-          <Text style={[styles.logoText, { color: isDark ? '#fff' : '#000' }]}>BYTE
-            <Text style={{ color: '#2ecc71', marginLeft: 4 }}>X</Text>
-          </Text>
+        {/* Logo Section */}
+        <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 24 }}>
+          <Image
+            source={require('../assets/logobytex-1.png')}
+            style={{ width: 160, height: 80, resizeMode: 'contain' }}
+          />
         </View>
-        <Text style={[styles.subtitle, { color: isDark ? '#d1d5db' : '#6b7280' }]}>Đăng Nhập Tài Khoản</Text>
+        {/* End Logo Section */}
+        <Text style={[styles.subtitle, { color: isDark ? '#d1d5db' : '#6b7280', textAlign: 'center', marginBottom: 32, fontSize: 14 }]}>Đăng Nhập Tài Khoản</Text>
         <View style={styles.formGroup}>
           <View>
-            <Text style={styles.label}>Tên Tài Khoản</Text>
+            <Text style={styles.label}>Email</Text>
             <TextInput
               style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
-              value={username}
-              onChangeText={setUsername}
+              value={email}
+              onChangeText={setEmail}
               autoComplete="off"
               autoCapitalize="none"
-              placeholder=""
+              placeholder="Nhập email của bạn"
               placeholderTextColor={isDark ? '#d1d5db' : '#000'}
             />
           </View>
@@ -57,12 +77,14 @@ export default function ByteXLogin() {
               autoCapitalize="none"
             />
           </View>
+          {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
           <TouchableOpacity>
             <Text style={styles.forgotText}>Quên Mật Khẩu ?</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.loginBtn}
             activeOpacity={0.8}
+            onPress={handleLogin}
           >
             <Text style={styles.loginText}>Đăng Nhập</Text>
           </TouchableOpacity>
@@ -83,7 +105,7 @@ export default function ByteXLogin() {
           <Text style={[styles.googleText, { color: isDark ? '#fff' : '#000' }]}>Đăng Nhập với Google</Text>
         </TouchableOpacity>
         <Text style={[styles.registerRow, { color: isDark ? '#6b7280' : '#9ca3af' }]}>Chưa Có Tài Khoản
-          <Text style={styles.registerLink}>Đăng Ký</Text>
+          <Text style={styles.registerLink} onPress={() => navigation.replace('Register')}>Đăng Ký</Text>
         </Text>
       </View>
     </ScrollView>

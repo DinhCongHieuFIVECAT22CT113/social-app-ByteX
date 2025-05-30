@@ -47,18 +47,3 @@ export function listenCommentCount(postId, callback) {
     callback(snapshot.size); // snapshot.size là số lượng comment
   });
 }
-
-// React hook ví dụ sử dụng listenCommentCount để hiển thị số comment realtime
-import { useEffect, useState } from 'react';
-import { listenCommentCount } from '../services/PostInteractionService';
-
-function PostItem({ post }) {
-  const [commentCount, setCommentCount] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = listenCommentCount(post.id, setCommentCount);
-    return () => unsubscribe();
-  }, [post.id]);
-
-  return <Text>{commentCount} bình luận</Text>;
-}

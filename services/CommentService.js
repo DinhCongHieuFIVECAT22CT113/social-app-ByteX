@@ -1,5 +1,5 @@
 import { db } from '../config/firebaseConfig';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs, onSnapshot } from 'firebase/firestore';
 
 // Dịch vụ xử lý comment và like cho bài viết (Firestore)
 
@@ -27,4 +27,19 @@ export async function getComments(postId) {
   const commentRef = collection(db, 'posts', postId, 'comments');
   const snapshot = await getDocs(commentRef);
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+// Lắng nghe comment realtime cho một post
+export function listenComments(postId, callback, errorCallback) {
+  const commentRef = collection(db, 'posts', postId, 'comments');
+  return onSnapshot(
+    commentRef,
+    (snapshot) => {
+      const comments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(comments);
+    },
+    (error) => {
+      if (errorCallback) errorCallback(error);
+    }
+  );
 }

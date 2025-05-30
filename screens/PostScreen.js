@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Image } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import {
   faArrowLeft,
@@ -15,12 +15,15 @@ import {
   faCommentDots,
 } from '@fortawesome/free-solid-svg-icons';
 import { addLike, getLikes, addComment, getComments } from '../services/CommentService';
+import * as ImagePicker from 'expo-image-picker';
+import ImageService from '../services/ImageService';
+import { addPost } from '../services/PostService';
 import styles from '../styles/PostScreenStyles';
 
 // PostScreen.js
 // Màn hình chi tiết bài viết, cho phép like, comment, hiển thị thông tin bài viết
 
-export default function PostScreen({ route }) {
+export default function PostScreen({ route, navigation }) {
   // Giả lập postId và userId, bạn nên lấy từ route.params hoặc context thực tế
   const postId = route?.params?.postId || 'testPostId';
   const userId = 'testUserId';
@@ -28,6 +31,8 @@ export default function PostScreen({ route }) {
   const [commentText, setCommentText] = useState('');
   const [likes, setLikes] = useState([]);
   const [comments, setComments] = useState([]);
+  const [caption, setCaption] = useState('');
+  const [image, setImage] = useState(null);
 
   // Lấy danh sách like/comment khi cần
   const fetchLikes = async () => {
@@ -57,6 +62,45 @@ export default function PostScreen({ route }) {
     fetchComments();
   };
 
+  // Chọn ảnh từ thư viện
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  // Đăng bài
+  const handlePost = async () => {
+    if (!caption.trim() && !image) {
+      Alert.alert('Lỗi', 'Vui lòng nhập nội dung hoặc chọn ảnh!');
+      return;
+    }
+    let imageUrl = '';
+    try {
+      if (image) {
+        imageUrl = await ImageService.uploadImageAsync(image, `posts/${Date.now()}.jpg`);
+      }
+      await addPost({
+        author: userId,
+        caption,
+        image: imageUrl,
+        createdAt: Date.now(),
+      });
+      setCaption('');
+      setImage(null);
+      Alert.alert('Thành công', 'Đăng bài thành công!');
+      if (navigation) navigation.goBack();
+    } catch (e) {
+      Alert.alert('Lỗi', 'Đăng bài thất bại!');
+    }
+  };
+
   // Có thể fetch dữ liệu khi mount component (tùy ý)
   React.useEffect(() => {
     fetchLikes();
@@ -71,7 +115,7 @@ export default function PostScreen({ route }) {
           <FontAwesomeIcon icon={faArrowLeft} size={16} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Tạo bài viết</Text>
-        <TouchableOpacity style={styles.headerPostBtn}>
+        <TouchableOpacity style={styles.headerPostBtn} onPress={handlePost}>
           <Text style={styles.headerPostBtnText}>Đăng bài</Text>
         </TouchableOpacity>
       </View>
@@ -96,9 +140,16 @@ export default function PostScreen({ route }) {
             <FontAwesomeIcon icon={faClock} size={12} color="black" />
             <Text style={styles.userTimeText}>Thời gian đăng</Text>
           </TouchableOpacity>
-          <Text style={styles.postInput}>
-            Bạn đang nghĩ gì ....
-          </Text>
+          <TextInput
+            style={styles.postInput}
+            placeholder="Bạn đang nghĩ gì ..."
+            value={caption}
+            onChangeText={setCaption}
+            multiline
+          />
+          {image && (
+            <Image source={{ uri: image }} style={{ width: '100%', height: 200, borderRadius: 12, marginTop: 12 }} />
+          )}
         </View>
       </View>
 
@@ -106,7 +157,7 @@ export default function PostScreen({ route }) {
 
       {/* Buttons group */}
       <View style={styles.groupBtn}>
-        <TouchableOpacity style={styles.groupBtnItem}>
+        <TouchableOpacity style={styles.groupBtnItem} onPress={pickImage}>
           <FontAwesomeIcon icon={faCamera} size={14} color="white" />
           <Text style={styles.groupBtnText}>Ảnh/Video</Text>
         </TouchableOpacity>

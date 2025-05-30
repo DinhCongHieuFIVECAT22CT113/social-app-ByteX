@@ -1,34 +1,56 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, ScrollView, useColorScheme } from 'react-native';
+import { register } from '../services/AuthService';
+import { useNavigation } from '@react-navigation/native';
 import styles from '../styles/RegisterScreenStyles';
 
 // RegisterScreen.js
 // Màn hình đăng ký tài khoản người dùng mới
 
 export default function ByteXRegister() {
-  const [username, setUsername] = useState('abc123');
-  const [email, setEmail] = useState('info@yourmail.com');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+
+  const handleRegister = async () => {
+    setError('');
+    if (!email || !password || !username) {
+      setError('Vui lòng nhập đầy đủ thông tin!');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Mật khẩu không khớp!');
+      return;
+    }
+    try {
+      await register(email, password, username);
+      navigation.replace('Login');
+    } catch (e) {
+      setError('Email đã tồn tại hoặc có lỗi!');
+    }
+  };
 
   return (
     <SafeAreaView style={[
       styles.root,
       isDark ? styles.rootDark : styles.rootLight
-    ]}>
+    ]}> 
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity style={styles.backBtn}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={{ color: '#fff', fontSize: 20 }}>←</Text>
         </TouchableOpacity>
         <Image
-          source={{ uri: 'https://placehold.co/320x128?text=BYTE+X+Logo+Placeholder' }}
+          source={require('../assets/logobytex-1.png')}
           style={styles.logo}
-          accessibilityLabel="BYTE X logo with black BYTE text and green X letter"
+          accessibilityLabel="BYTE X logo"
         />
         <Text style={[
           styles.subtitle,
@@ -79,7 +101,8 @@ export default function ByteXRegister() {
             secureTextEntry
             placeholderTextColor="#9ca3af"
           />
-          <TouchableOpacity style={styles.registerBtn}>
+          {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
+          <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
             <Text style={styles.registerBtnText}>Đăng Ký</Text>
           </TouchableOpacity>
         </View>
@@ -116,7 +139,7 @@ export default function ByteXRegister() {
           isDark ? styles.registerRowDark : styles.registerRowLight
         ]}>
           Đã Có Tài Khoản
-          <Text style={styles.registerLink}>Đăng Nhập</Text>
+          <Text style={styles.registerLink} onPress={() => navigation.replace('Login')}>Đăng Nhập</Text>
         </Text>
       </ScrollView>
     </SafeAreaView>

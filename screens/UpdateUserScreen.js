@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, TextInput, Image, TouchableOpacity, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import styles from '../styles/UpdateUserScreenStyles';
+import ImageService from '../services/ImageService';
+import { updateUserProfile, updateUserFirestore } from '../services/UserService';
 
 // UpdateUserScreen.js
 // Màn hình cập nhật thông tin cá nhân (displayName, bio, avatar)
@@ -11,6 +13,7 @@ export default function UpdateUserScreen({ navigation, route }) {
   const [displayName, setDisplayName] = useState(user.displayName);
   const [bio, setBio] = useState(user.bio);
   const [avatar, setAvatar] = useState(user.avatar);
+  const [saving, setSaving] = useState(false);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -24,9 +27,22 @@ export default function UpdateUserScreen({ navigation, route }) {
     }
   };
 
-  const handleSave = () => {
-    onUpdate({ displayName, bio, avatar });
-    navigation.goBack();
+  const handleSave = async () => {
+    setSaving(true);
+    let photoURL = avatar;
+    try {
+      // Nếu avatar là local file (có dạng file://), upload lên Firebase Storage
+      if (avatar && avatar.startsWith('file')) {
+        photoURL = await ImageService.uploadImageAsync(avatar, `avatars/${user.uid}.jpg`);
+      }
+      await updateUserProfile({ displayName, photoURL });
+      await updateUserFirestore(user.uid, { bio });
+      onUpdate({ displayName, bio, avatar: photoURL });
+      navigation.goBack();
+    } catch (e) {
+      alert('Cập nhật thất bại!');
+    }
+    setSaving(false);
   };
 
   return (
@@ -49,8 +65,8 @@ export default function UpdateUserScreen({ navigation, route }) {
         style={styles.input}
         placeholderTextColor="#9ca3af"
       />
-      <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-        <Text style={styles.saveBtnText}>Lưu</Text>
+      <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
+        <Text style={styles.saveBtnText}>{saving ? 'Đang lưu...' : 'Lưu'}</Text>
       </TouchableOpacity>
     </View>
   );
