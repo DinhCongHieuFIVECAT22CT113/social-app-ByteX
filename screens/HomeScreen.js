@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { styled } from 'nativewind';
 
@@ -7,21 +7,40 @@ const StyledText = styled(Text);
 const StyledImage = styled(Image);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
+  const [user, setUser] = useState({
+    avatar: 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg',
+    displayName: 'Elezabeth',
+    bio: 'UI/UX Designer & Cat lover',
+    email: 'elezabeth@gmail.com',
+  });
+
   return (
     <ScrollView contentContainerStyle={{ padding: 16, backgroundColor: 'white' }}>
 
       {/* Header */}
       <StyledView className="flex-row justify-between items-center border-b border-gray-400 pb-2">
         <StyledView className="flex-row items-center space-x-4">
-          <StyledView className="w-12 h-12 rounded-full border-2 border-[#2ecc40]" />
+          <StyledImage
+            source={{ uri: user.avatar }}
+            className="w-12 h-12 rounded-full border-2 border-[#2ecc40]"
+            alt="User avatar"
+          />
           <View>
-            <StyledText className="text-sm text-gray-900">Tên Tài Khoản</StyledText>
-            <StyledText className="text-xs text-gray-500">Email@gmail.com</StyledText>
+            <StyledText className="text-sm font-semibold text-gray-900">{user.displayName}</StyledText>
+            <StyledText className="text-xs text-gray-500">{user.bio}</StyledText>
+            <StyledText className="text-xs text-gray-400">{user.email}</StyledText>
           </View>
         </StyledView>
-        <StyledTouchableOpacity>
-          <StyledText className="text-gray-600 text-lg">›</StyledText>
+        <StyledTouchableOpacity
+          onPress={() =>
+            navigation.navigate('UpdateUser', {
+              user,
+              onUpdate: (newUser) => setUser({ ...user, ...newUser }),
+            })
+          }
+        >
+          <StyledText className="text-gray-600 text-lg">✎</StyledText>
         </StyledTouchableOpacity>
       </StyledView>
 
