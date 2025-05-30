@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, useColorScheme } from 'react-native';
 import { styled } from 'nativewind';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
@@ -13,9 +13,14 @@ const StyledImage = styled(Image);
 export default function ByteXLogin() {
   const [username, setUsername] = useState('abc123');
   const [password, setPassword] = useState('');
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="bg-white flex justify-center items-center px-6">
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      className={`${isDark ? 'bg-[#18181b]' : 'bg-white'} flex justify-center items-center px-6`}
+    >
       <StyledView className="w-full max-w-xs">
         <StyledTouchableOpacity
           accessibilityLabel="Back"
@@ -26,35 +31,35 @@ export default function ByteXLogin() {
         </StyledTouchableOpacity>
 
         <StyledView className="flex justify-center mb-6">
-          <StyledText className="font-extrabold text-4xl text-black flex flex-row items-center">
+          <StyledText className={`font-extrabold text-4xl ${isDark ? 'text-white' : 'text-black'} flex flex-row items-center`}>
             BYTE
             <StyledText className="text-[#2ecc71] ml-1">X</StyledText>
           </StyledText>
         </StyledView>
 
-        <StyledText className="text-center text-gray-500 mb-8 text-sm">Đăng Nhập Tài Khoản</StyledText>
+        <StyledText className={`text-center mb-8 text-sm ${isDark ? 'text-gray-300' : 'text-gray-500'}`}>Đăng Nhập Tài Khoản</StyledText>
 
         <StyledView className="space-y-4">
           <StyledView>
             <StyledText className="text-[#2ecc71] text-xs font-medium mb-1">Tên Tài Khoản</StyledText>
             <StyledTextInput
-              className="w-full border border-[#2ecc71] rounded-md px-4 py-2 text-sm"
+              className={`w-full border rounded-md px-4 py-2 text-sm ${isDark ? 'border-[#2ecc71] text-white' : 'border-[#2ecc71] text-black'}`}
               value={username}
               onChangeText={setUsername}
               autoComplete="off"
               autoCapitalize="none"
               placeholder=""
-              placeholderTextColor="#000000"
+              placeholderTextColor={isDark ? "#d1d5db" : "#000000"}
             />
           </StyledView>
 
           <StyledView>
             <StyledTextInput
-              className="w-full border border-gray-200 rounded-md px-4 py-2 text-sm text-gray-400"
+              className={`w-full border rounded-md px-4 py-2 text-sm ${isDark ? 'border-gray-700 text-gray-200' : 'border-gray-200 text-gray-400'}`}
               value={password}
               onChangeText={setPassword}
               placeholder="Nhập Mật Khẩu của Bạn"
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={isDark ? "#6b7280" : "#9ca3af"}
               secureTextEntry
               autoComplete="off"
               autoCapitalize="none"
@@ -74,13 +79,13 @@ export default function ByteXLogin() {
         </StyledView>
 
         <StyledView className="flex flex-row items-center my-6">
-          <StyledView className="flex-grow border-t border-gray-300" />
-          <StyledText className="mx-3 text-gray-400 text-xs">Hoặc</StyledText>
-          <StyledView className="flex-grow border-t border-gray-300" />
+          <StyledView className={`flex-grow border-t ${isDark ? 'border-gray-700' : 'border-gray-300'}`} />
+          <StyledText className={`mx-3 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Hoặc</StyledText>
+          <StyledView className={`flex-grow border-t ${isDark ? 'border-gray-700' : 'border-gray-300'}`} />
         </StyledView>
 
         <StyledTouchableOpacity
-          className="w-full border border-gray-300 rounded-full py-2 flex flex-row items-center justify-center space-x-3"
+          className={`w-full border rounded-full py-2 flex flex-row items-center justify-center space-x-3 ${isDark ? 'border-gray-700' : 'border-gray-300'}`}
           activeOpacity={0.7}
         >
           <StyledImage
@@ -88,10 +93,10 @@ export default function ByteXLogin() {
             alt="Google logo, multicolor G letter on white background"
             className="w-5 h-5"
           />
-          <StyledText className="text-black text-sm font-normal">Đăng Nhập với Google</StyledText>
+          <StyledText className={`${isDark ? 'text-white' : 'text-black'} text-sm font-normal`}>Đăng Nhập với Google</StyledText>
         </StyledTouchableOpacity>
 
-        <StyledText className="text-center text-gray-400 text-xs mt-6">
+        <StyledText className={`text-center text-xs mt-6 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
           Chưa Có Tài Khoản
           <StyledText className="text-[#2ecc71] font-normal ml-1 underline">Đăng Ký</StyledText>
         </StyledText>

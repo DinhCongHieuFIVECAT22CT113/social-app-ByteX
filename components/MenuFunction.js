@@ -9,27 +9,27 @@ const App = () => {
 
   return (
     <TailwindProvider>
-      <View className="flex-1 justify-center items-center p-5 bg-white">
+      <View className={`flex-1 justify-center items-center p-5 ${isDarkMode ? 'bg-[#18181b]' : 'bg-white'}`}>
         
         {/* Danh Sách Bài Đăng */}
-        <View className="flex-row justify-between items-center w-full border-b border-gray-200 py-4">
-          <Text className="text-lg">Danh Sách Bài Đăng</Text>
+        <View className={`flex-row justify-between items-center w-full border-b py-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <Text className={`text-lg ${isDarkMode ? 'text-white' : 'text-black'}`}>Danh Sách Bài Đăng</Text>
           <TouchableOpacity>
             <Text className="text-blue-500"></Text>
           </TouchableOpacity>
         </View>
 
         {/* Thay Ảnh Avatar */}
-        <View className="flex-row justify-between items-center w-full border-b border-gray-200 py-4">
-          <Text className="text-lg">Thay Ảnh Avatar</Text>
+        <View className={`flex-row justify-between items-center w-full border-b py-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <Text className={`text-lg ${isDarkMode ? 'text-white' : 'text-black'}`}>Thay Ảnh Avatar</Text>
           <TouchableOpacity>
             <Text className="text-blue-500"></Text>
           </TouchableOpacity>
         </View>
 
         {/* Chế Độ Sáng/Tối */}
-        <View className="flex-row justify-between items-center w-full border-b border-gray-200 py-4">
-          <Text className="text-lg">Chế Độ Sáng/Tối</Text>
+        <View className={`flex-row justify-between items-center w-full border-b py-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <Text className={`text-lg ${isDarkMode ? 'text-white' : 'text-black'}`}>Chế Độ Sáng/Tối</Text>
           <Switch
             onValueChange={toggleSwitch}
             value={isDarkMode}
@@ -44,8 +44,8 @@ const App = () => {
         </TouchableOpacity>
 
         {/* Nút Quay Lại */}
-        <TouchableOpacity className="mt-5 bg-gray-200 rounded-lg px-4 py-2">
-          <Text className="text-black text-lg text-center">←</Text>
+        <TouchableOpacity className={`mt-5 rounded-lg px-4 py-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+          <Text className={`text-lg text-center ${isDarkMode ? 'text-white' : 'text-black'}`}>←</Text>
         </TouchableOpacity>
         
       </View>

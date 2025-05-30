@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
+import {
+  View, Text, Image, TouchableOpacity,
+  ActivityIndicator, FlatList, useColorScheme
+} from 'react-native';
 import { styled } from 'nativewind';
 import { getPostsPaginated } from '../services/PostService';
 
@@ -15,6 +18,8 @@ export default function HomeScreen() {
   const [lastDoc, setLastDoc] = useState(null);
   const [loading, setLoading] = useState(false);
   const [noMore, setNoMore] = useState(false);
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
   useEffect(() => {
     loadMorePosts();
@@ -29,11 +34,11 @@ export default function HomeScreen() {
       setPosts(prev => [...prev, ...newPosts]);
       setLastDoc(lastVisible);
       setLoading(false);
-    }, 1000); // Fake delay 1s
+    }, 1000); // Giả lập delay
   };
 
   const renderItem = ({ item }) => (
-    <StyledView className="mt-6 bg-white rounded-lg shadow p-4">
+    <StyledView className={`mt-6 rounded-lg shadow p-4 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
       <StyledView className="flex-row items-center space-x-3">
         <StyledView className="relative">
           <StyledImage
@@ -43,13 +48,13 @@ export default function HomeScreen() {
           <StyledView className="absolute bottom-0 right-0 w-3 h-3 bg-[#2ecc40] border-2 border-white rounded-full" />
         </StyledView>
         <View>
-          <StyledText className="text-sm font-semibold text-gray-900">{item.author || 'Tên Tài Khoản'}</StyledText>
-          <StyledText className="text-xs text-gray-500">
+          <StyledText className={`text-sm font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{item.author || 'Tên Tài Khoản'}</StyledText>
+          <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             {item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}
           </StyledText>
         </View>
-        <StyledTouchableOpacity className="ml-auto border border-gray-300 rounded-full px-4 py-1">
-          <StyledText className="text-xs text-gray-800">Following</StyledText>
+        <StyledTouchableOpacity className={`ml-auto border rounded-full px-4 py-1 ${isDark ? 'border-gray-600' : 'border-gray-300'}`}>
+          <StyledText className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Following</StyledText>
         </StyledTouchableOpacity>
       </StyledView>
 
@@ -61,11 +66,11 @@ export default function HomeScreen() {
         />
       )}
 
-      <StyledText className="mt-4 text-xs text-gray-500 leading-relaxed">
+      <StyledText className={`mt-4 text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
         {item.content || ''}
       </StyledText>
 
-      <StyledView className="flex-row space-x-6 mt-4 text-gray-600 text-sm">
+      <StyledView className={`flex-row space-x-6 mt-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
         <StyledTouchableOpacity className="flex-row items-center space-x-1">
           <StyledText>🔁</StyledText>
           <StyledText>{item.shares || 0}</StyledText>
@@ -87,29 +92,30 @@ export default function HomeScreen() {
       data={posts}
       keyExtractor={item => item.id}
       renderItem={renderItem}
-      contentContainerStyle={{ padding: 16, backgroundColor: 'white' }}
+      contentContainerStyle={{
+        padding: 16,
+        backgroundColor: isDark ? '#18181b' : 'white',
+      }}
       onEndReached={loadMorePosts}
       onEndReachedThreshold={0.2}
       ListHeaderComponent={
         <>
-          {/* Header */}
-          <StyledView className="flex-row justify-between items-center border-b border-gray-400 pb-2">
+          <StyledView className={`flex-row justify-between items-center border-b pb-2 ${isDark ? 'border-gray-700' : 'border-gray-400'}`}>
             <StyledView className="flex-row items-center space-x-4">
               <StyledView className="w-12 h-12 rounded-full border-2 border-[#2ecc40]" />
               <View>
-                <StyledText className="text-sm text-gray-900">Tên Tài Khoản</StyledText>
-                <StyledText className="text-xs text-gray-500">Email@gmail.com</StyledText>
+                <StyledText className={`text-sm ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Tên Tài Khoản</StyledText>
+                <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Email@gmail.com</StyledText>
               </View>
             </StyledView>
             <StyledTouchableOpacity>
-              <StyledText className="text-gray-600 text-lg">›</StyledText>
+              <StyledText className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-lg`}>›</StyledText>
             </StyledTouchableOpacity>
           </StyledView>
 
-          {/* Status Button */}
           <StyledView className="flex justify-center mt-4">
-            <StyledTouchableOpacity className="bg-gray-300 rounded-full px-4 py-1">
-              <StyledText className="text-xs text-gray-700">Chia Sẻ Trạng Thái của Bạn ....</StyledText>
+            <StyledTouchableOpacity className={`${isDark ? 'bg-gray-700' : 'bg-gray-300'} rounded-full px-4 py-1`}>
+              <StyledText className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Chia Sẻ Trạng Thái của Bạn ....</StyledText>
             </StyledTouchableOpacity>
           </StyledView>
         </>
