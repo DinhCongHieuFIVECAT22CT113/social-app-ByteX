@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, useColorScheme } from 'react-native';
 import { styled } from 'nativewind';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faChevronRight, faCommentAlt } from '@fortawesome/free-solid-svg-icons';
@@ -10,16 +10,19 @@ const StyledImage = styled(Image);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function ProfileScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
-    <ScrollView className="bg-white flex-1 p-4">
+    <ScrollView className={`${isDark ? 'bg-[#18181b]' : 'bg-white'} flex-1 p-4`}>
       {/* Header */}
       <StyledView className="flex-row items-center justify-between mb-6">
         <StyledTouchableOpacity className="bg-gradient-to-b from-[#3EDB5B] to-[#1DBA3B] p-3 rounded-lg shadow-md">
           <FontAwesomeIcon icon={faArrowLeft} style={{ color: 'white', fontSize: 20 }} />
         </StyledTouchableOpacity>
-        <StyledText className="text-lg font-semibold text-gray-900">Trang cá nhân</StyledText>
-        <StyledTouchableOpacity className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center">
-          <FontAwesomeIcon icon={faChevronRight} style={{ color: '#4B5563', fontSize: 16 }} />
+        <StyledText className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>Trang cá nhân</StyledText>
+        <StyledTouchableOpacity className={`w-8 h-8 rounded-full border ${isDark ? 'border-gray-700' : 'border-gray-300'} flex items-center justify-center`}>
+          <FontAwesomeIcon icon={faChevronRight} style={{ color: isDark ? '#d1d5db' : '#4B5563', fontSize: 16 }} />
         </StyledTouchableOpacity>
       </StyledView>
 
@@ -32,15 +35,15 @@ export default function ProfileScreen() {
             accessibilityLabel="Headshot of a smiling man with short dark hair wearing a black shirt, circular crop"
           />
         </StyledView>
-        <StyledText className="font-semibold text-gray-900 text-base mb-1">Tên Tài Khoản</StyledText>
-        <StyledText className="text-gray-400 text-sm">Email@gmail.com</StyledText>
+        <StyledText className={`font-semibold text-base mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>Tên Tài Khoản</StyledText>
+        <StyledText className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Email@gmail.com</StyledText>
       </StyledView>
 
       {/* Buttons */}
       <StyledView className="flex-row justify-center space-x-3 mb-6">
-        <StyledTouchableOpacity className="flex-row items-center space-x-2 border border-gray-300 rounded-full px-4 py-2">
-          <FontAwesomeIcon icon={faCommentAlt} style={{ color: '#374151', fontSize: 16 }} />
-          <StyledText className="text-gray-700 text-sm">Trò chuyện</StyledText>
+        <StyledTouchableOpacity className={`flex-row items-center space-x-2 border rounded-full px-4 py-2 ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>
+          <FontAwesomeIcon icon={faCommentAlt} style={{ color: isDark ? '#d1d5db' : '#374151', fontSize: 16 }} />
+          <StyledText className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Trò chuyện</StyledText>
         </StyledTouchableOpacity>
         <StyledTouchableOpacity className="bg-gradient-to-b from-[#3EDB5B] to-[#1DBA3B] rounded-full px-5 py-2">
           <StyledText className="text-white text-sm font-semibold">Theo Dõi</StyledText>
@@ -49,21 +52,21 @@ export default function ProfileScreen() {
 
       {/* Stats */}
       <StyledView className="flex-row justify-between mb-6">
-        <StyledView className="flex-col items-center border border-gray-200 rounded-lg w-1/3 py-4 mx-1">
-          <StyledText className="text-lg font-semibold text-gray-900">6.3k</StyledText>
-          <StyledText className="text-xs text-gray-400">Followers</StyledText>
+        <StyledView className={`flex-col items-center border rounded-lg w-1/3 py-4 mx-1 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+          <StyledText className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>6.3k</StyledText>
+          <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Followers</StyledText>
         </StyledView>
-        <StyledView className="flex-col items-center border border-gray-200 rounded-lg w-1/3 py-4 mx-1">
-          <StyledText className="text-lg font-semibold text-gray-900">572</StyledText>
-          <StyledText className="text-xs text-gray-400">Post</StyledText>
+        <StyledView className={`flex-col items-center border rounded-lg w-1/3 py-4 mx-1 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+          <StyledText className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>572</StyledText>
+          <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Post</StyledText>
         </StyledView>
-        <StyledView className="flex-col items-center border border-gray-200 rounded-lg w-1/3 py-4 mx-1">
-          <StyledText className="text-lg font-semibold text-gray-900">2.5k</StyledText>
-          <StyledText className="text-xs text-gray-400">Following</StyledText>
+        <StyledView className={`flex-col items-center border rounded-lg w-1/3 py-4 mx-1 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+          <StyledText className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>2.5k</StyledText>
+          <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-400'}`}>Following</StyledText>
         </StyledView>
       </StyledView>
 
-      <StyledView className="border-b border-gray-200 mb-6" />
+      <StyledView className={`border-b mb-6 ${isDark ? 'border-gray-700' : 'border-gray-200'}`} />
 
       {/* Image Gallery */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row space-x-4 pb-2">

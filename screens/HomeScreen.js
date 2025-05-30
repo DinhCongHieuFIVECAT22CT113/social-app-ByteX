@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, useColorScheme } from 'react-native';
 import { styled } from 'nativewind';
 
 const StyledView = styled(View);
@@ -8,27 +8,34 @@ const StyledImage = styled(Image);
 const StyledTouchableOpacity = styled(TouchableOpacity);
 
 export default function HomeScreen() {
-  return (
-    <ScrollView contentContainerStyle={{ padding: 16, backgroundColor: 'white' }}>
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
 
+  return (
+    <ScrollView
+      contentContainerStyle={{
+        padding: 16,
+        backgroundColor: isDark ? '#18181b' : 'white',
+      }}
+    >
       {/* Header */}
-      <StyledView className="flex-row justify-between items-center border-b border-gray-400 pb-2">
+      <StyledView className={`flex-row justify-between items-center border-b pb-2 ${isDark ? 'border-gray-700' : 'border-gray-400'}`}>
         <StyledView className="flex-row items-center space-x-4">
-          <StyledView className="w-12 h-12 rounded-full border-2 border-[#2ecc40]" />
+          <StyledView className={`w-12 h-12 rounded-full border-2 ${isDark ? 'border-[#2ecc40]' : 'border-[#2ecc40]'}`} />
           <View>
-            <StyledText className="text-sm text-gray-900">Tên Tài Khoản</StyledText>
-            <StyledText className="text-xs text-gray-500">Email@gmail.com</StyledText>
+            <StyledText className={`text-sm ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Tên Tài Khoản</StyledText>
+            <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Email@gmail.com</StyledText>
           </View>
         </StyledView>
         <StyledTouchableOpacity>
-          <StyledText className="text-gray-600 text-lg">›</StyledText>
+          <StyledText className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-lg`}>›</StyledText>
         </StyledTouchableOpacity>
       </StyledView>
 
       {/* Status Button */}
       <StyledView className="flex justify-center mt-4">
-        <StyledTouchableOpacity className="bg-gray-300 rounded-full px-4 py-1">
-          <StyledText className="text-xs text-gray-700">Chia Sẻ Trạng Thái của Bạn ....</StyledText>
+        <StyledTouchableOpacity className={`${isDark ? 'bg-gray-700' : 'bg-gray-300'} rounded-full px-4 py-1`}>
+          <StyledText className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Chia Sẻ Trạng Thái của Bạn ....</StyledText>
         </StyledTouchableOpacity>
       </StyledView>
 
@@ -44,11 +51,11 @@ export default function HomeScreen() {
             <StyledView className="absolute bottom-0 right-0 w-3 h-3 bg-[#2ecc40] border-2 border-white rounded-full" />
           </StyledView>
           <View>
-            <StyledText className="text-sm font-semibold text-gray-900">Elezabeth</StyledText>
-            <StyledText className="text-xs text-gray-500">52 minute ago</StyledText>
+            <StyledText className={`text-sm font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Elezabeth</StyledText>
+            <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>52 minute ago</StyledText>
           </View>
-          <StyledTouchableOpacity className="ml-auto border border-gray-300 rounded-full px-4 py-1">
-            <StyledText className="text-xs text-gray-800">Following</StyledText>
+          <StyledTouchableOpacity className={`ml-auto border rounded-full px-4 py-1 ${isDark ? 'border-gray-600' : 'border-gray-300'}`}>
+            <StyledText className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Following</StyledText>
           </StyledTouchableOpacity>
         </StyledView>
 
@@ -59,11 +66,11 @@ export default function HomeScreen() {
           resizeMode="cover"
         />
 
-        <StyledText className="mt-4 text-xs text-gray-500 leading-relaxed">
+        <StyledText className={`mt-4 text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et.
         </StyledText>
 
-        <StyledView className="flex-row space-x-6 mt-4 text-gray-600 text-sm">
+        <StyledView className={`flex-row space-x-6 mt-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
           <StyledTouchableOpacity className="flex-row items-center space-x-1">
             <StyledText>🔁</StyledText>
             <StyledText>36</StyledText>
@@ -91,19 +98,18 @@ export default function HomeScreen() {
             <StyledView className="absolute bottom-0 right-0 w-3 h-3 bg-[#2ecc40] border-2 border-white rounded-full" />
           </StyledView>
           <View>
-            <StyledText className="text-sm font-semibold text-gray-900">Tom</StyledText>
-            <StyledText className="text-xs text-gray-500">1 h ago</StyledText>
+            <StyledText className={`text-sm font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Tom</StyledText>
+            <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>1 h ago</StyledText>
           </View>
           <StyledTouchableOpacity className="ml-auto bg-[#2ecc40] rounded-full px-5 py-1">
             <StyledText className="text-xs text-white">Follow</StyledText>
           </StyledTouchableOpacity>
         </StyledView>
 
-        <StyledText className="mt-4 text-xs text-gray-500 leading-relaxed">
+        <StyledText className={`mt-4 text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et.
         </StyledText>
       </StyledView>
-
     </ScrollView>
   );
 }

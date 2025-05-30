@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, useColorScheme } from 'react-native';
 
 const ConfirmPasswordScreen = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
-    <View className="flex-1 justify-center items-center p-4 bg-white">
+    <View className={`flex-1 justify-center items-center p-4 ${isDark ? 'bg-[#18181b]' : 'bg-white'}`}>
       <TouchableOpacity className="flex-row items-center mb-6">
         <Text className="text-green-500 text-lg">&lt;</Text>
       </TouchableOpacity>
@@ -12,7 +15,8 @@ const ConfirmPasswordScreen = () => {
         <TextInput 
           placeholder="Nhập Mật Khẩu của Bạn" 
           secureTextEntry 
-          className="border border-gray-300 rounded-lg p-2"
+          className={`border rounded-lg p-2 ${isDark ? 'border-gray-700 text-white bg-[#232326]' : 'border-gray-300 text-black bg-white'}`}
+          placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
         />
       </View>
       
@@ -20,7 +24,8 @@ const ConfirmPasswordScreen = () => {
         <TextInput 
           placeholder="Nhập Lại Mật Khẩu của Bạn" 
           secureTextEntry 
-          className="border border-gray-300 rounded-lg p-2"
+          className={`border rounded-lg p-2 ${isDark ? 'border-gray-700 text-white bg-[#232326]' : 'border-gray-300 text-black bg-white'}`}
+          placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
         />
       </View>
       

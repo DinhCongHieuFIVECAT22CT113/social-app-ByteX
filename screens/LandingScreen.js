@@ -1,13 +1,19 @@
 import React from 'react';
-import { Text, View, TouchableOpacity, Image } from 'react-native';
-import { NativeWindStyleSheet } from 'nativewind';
+import { Text, View, TouchableOpacity, Image, useColorScheme } from 'react-native';
 
 const App = () => {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   return (
-    <View className="flex-1 items-center justify-center bg-white">
+    <View
+      className={`flex-1 items-center justify-center ${
+        isDark ? 'bg-black' : 'bg-white'
+      }`}
+    >
       {/* Logo Section */}
       <View className="flex-row items-center">
-        <Text className="text-5xl font-bold text-black">BYTE</Text>
+        <Text className={`text-5xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>BYTE</Text>
         <Text className="text-5xl font-bold text-green-500">X</Text>
       </View>
       
@@ -18,7 +24,11 @@ const App = () => {
       />
       
       {/* Text Section */}
-      <Text className="text-2xl text-center font-semibold text-black mb-4">
+      <Text
+        className={`text-2xl text-center font-semibold mb-4 ${
+          isDark ? 'text-white' : 'text-black'
+        }`}
+      >
         Nơi Kết Nối Mọi Người Với Nhau
       </Text>
       
