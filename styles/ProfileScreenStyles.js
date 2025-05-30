@@ -11,6 +11,12 @@ export default StyleSheet.create({
   rootLight: {
     backgroundColor: '#fff',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -111,6 +117,7 @@ export default StyleSheet.create({
     paddingVertical: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   followBtnText: {
     color: '#fff',
@@ -160,12 +167,35 @@ export default StyleSheet.create({
   },
   galleryRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 24,
   },
   galleryImage: {
     width: 96,
     height: 112,
     borderRadius: 12,
     marginRight: 12,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  logoutBtnDark: {
+    backgroundColor: '#27272a',
+    borderColor: '#374151',
+  },
+  logoutBtnText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#ef4444',
+  },
+  logoutBtnTextDark: {
+    color: '#f87171',
   },
 });

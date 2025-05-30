@@ -111,7 +111,7 @@ export default function PostScreen({ route, navigation }) {
     <ScrollView style={styles.root}>
       {/* Header */}
       <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.headerBtn}>
+        <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
           <FontAwesomeIcon icon={faArrowLeft} size={16} color="white" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Tạo bài viết</Text>

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, useColorScheme, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import styles from '../styles/CommentsScreenStyles';
 import { getComments, addComment, listenComments } from '../services/CommentService';
+import { auth } from '../config/firebaseConfig';
 
 export default function CommentsScreen({ route }) {
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const postId = route?.params?.postId;
@@ -29,12 +34,26 @@ export default function CommentsScreen({ route }) {
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
     try {
-      // TODO: Lấy userId, avatar, displayName thực từ context/auth
-      await addComment(postId, { userId: 'testUser', text: commentText });
+      const user = auth.currentUser;
+      if (!user) {
+        setError('Bạn cần đăng nhập để bình luận');
+        return;
+      }
+      
+      await addComment(postId, { 
+        userId: user.uid, 
+        text: commentText,
+        displayName: user.displayName || 'Người dùng ByteX',
+        avatar: user.photoURL
+      });
       setCommentText('');
     } catch (e) {
       setError('Không thể gửi bình luận.');
     }
+  };
+
+  const handleGoBack = () => {
+    navigation.goBack();
   };
 
   // TODO: Lấy thông tin post thực từ backend (ảnh, author, thời gian, số like/comment)
@@ -45,6 +64,9 @@ export default function CommentsScreen({ route }) {
       <View style={[styles.card, isDark && styles.cardDark]}>
         {/* Header */}
         <View style={styles.headerRow}>
+          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
+            <FontAwesomeIcon icon={faArrowLeft} size={16} color={isDark ? '#fff' : '#000'} />
+          </TouchableOpacity>
           <View style={styles.avatar} />
           <View>
             <Text style={[styles.author, isDark && styles.authorDark]}>Tên Tài Khoản</Text>

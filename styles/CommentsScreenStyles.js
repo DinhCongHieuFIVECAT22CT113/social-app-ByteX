@@ -27,6 +27,12 @@ export default StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+    borderRadius: 20,
+    backgroundColor: '#f3f4f6',
+  },
   avatar: {
     width: 48,
     height: 48,
