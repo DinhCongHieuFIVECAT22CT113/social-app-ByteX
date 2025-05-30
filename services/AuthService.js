@@ -6,16 +6,13 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, ActivityIndicator, Vibration, useColorScheme, View, Text } from 'react-native';
 import { getPostsPaginated } from '../services/PostService';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
-import { app } from '../config/firebaseConfig';
+import { auth } from '../config/firebaseConfig';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { uploadImageAsync } from '../services/ImageService';
 import { updateUserProfile, updateUserFirestore } from '../services/UserService';
 import { likePost } from '../services/PostInteractionService';
-
-// Khởi tạo đối tượng xác thực Firebase
-const auth = getAuth(app);
 
 // =======================
 // Đăng ký tài khoản mới
@@ -81,7 +78,9 @@ async function handleChangeAvatar() {
   if (result.cancelled) return;
 
   const uri = result.assets[0].uri; // Expo SDK 48+
-  const user = getAuth().currentUser;
+  // SỬA: Luôn dùng biến auth đã khởi tạo từ firebaseConfig thay vì tạo mới bằng getAuth(app)
+  const user = auth.currentUser;
+  if (!user) throw new Error('No user logged in');
 
   // 2. Upload ảnh lên Storage
   const photoURL = await uploadImageAsync(uri, `avatars/${user.uid}.jpg`);

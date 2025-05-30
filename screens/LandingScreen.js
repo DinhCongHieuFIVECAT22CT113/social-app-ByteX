@@ -4,9 +4,13 @@ import styles from '../styles/LandingScreenStyles';
 
 // Màn hình chào mừng/giới thiệu ứng dụng ByteX
 
-const LandingScreen = () => {
+const LandingScreen = ({ navigation }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+
+  const handleStart = () => {
+    navigation.replace('Login');
+  };
 
   return (
     <View
@@ -41,7 +45,7 @@ const LandingScreen = () => {
       </Text>
       
       {/* Button */}
-      <TouchableOpacity style={styles.btn}>
+      <TouchableOpacity style={styles.btn} onPress={handleStart}>
         <Text style={styles.btnText}>Bắt Đầu</Text>
       </TouchableOpacity>
     </View>

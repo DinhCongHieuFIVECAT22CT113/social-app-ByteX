@@ -2,8 +2,9 @@
 // Cấu hình và khởi tạo Firebase cho toàn bộ app
 
 // Import các hàm cần thiết từ Firebase SDK
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps } from "firebase/app";
+import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
@@ -12,18 +13,19 @@ const firebaseConfig = {
   apiKey: "AIzaSyAkIzQopZ8NMootzAUBfv95rP1Mtadti-E",
   authDomain: "social-app-bytex.firebaseapp.com",
   projectId: "social-app-bytex",
-  storageBucket: "social-app-bytex.firebasestorage.app",
+  storageBucket: "social-app-bytex.appspot.com", // Sửa lại domain đúng
   messagingSenderId: "417194317011",
   appId: "1:417194317011:web:b49abb4a0bd67155f73026",
   measurementId: "G-SLN164DJ65"
 };
 
-// Khởi tạo app Firebase với config ở trên
-const app = initializeApp(firebaseConfig);
+// Khởi tạo app Firebase với config ở trên, chỉ khi chưa có app nào
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-
-// Khởi tạo các service Firebase bạn sẽ dùng
-export const auth = getAuth(app);          // Xác thực người dùng (Auth)
+// Sử dụng initializeAuth để lưu trạng thái đăng nhập với AsyncStorage
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
 export const db = getFirestore(app);        // Firestore database
 export const storage = getStorage(app);     // Firebase Storage (upload ảnh) nhưng đang không dùng vì chưa update tài khoản lên pro
 

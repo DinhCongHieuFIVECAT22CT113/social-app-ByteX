@@ -1,4 +1,5 @@
-import { getAuth, updateProfile } from 'firebase/auth';
+import { auth } from '../config/firebaseConfig';
+import { updateProfile } from 'firebase/auth';
 import { db } from '../config/firebaseConfig';
 import { doc, updateDoc } from 'firebase/firestore';
 
@@ -7,7 +8,6 @@ import { doc, updateDoc } from 'firebase/firestore';
 
 // Cập nhật thông tin profile trên Firebase Auth (displayName, avatar)
 export async function updateUserProfile({ displayName, photoURL }) {
-  const auth = getAuth();
   if (!auth.currentUser) throw new Error('No user logged in');
   await updateProfile(auth.currentUser, { displayName, photoURL });
 }
