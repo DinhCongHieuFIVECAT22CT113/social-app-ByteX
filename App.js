@@ -1,6 +1,8 @@
 import React from 'react';
 import AppNavigator from './navigation/navigation';
 import UpdateUserScreen from './screens/UpdateUserScreen';
+// Import LikeButton từ đúng đường dẫn
+import LikeButton from './components/LikeButton';
 
 export default function App() {
   return (
@@ -9,6 +11,11 @@ export default function App() {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="UpdateUser" component={UpdateUserScreen} />
       </Stack.Navigator>
+      <div>
+        <h1>Social App ByteX</h1>
+        {/* Sử dụng nút Like */}
+        <LikeButton />
+      </div>
     </AppNavigator>
   );
 }
