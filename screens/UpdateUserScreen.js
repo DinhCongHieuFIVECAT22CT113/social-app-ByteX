@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Image, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, Image, TouchableOpacity, Text } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import styles from '../styles/UpdateUserScreenStyles';
 
 // UpdateUserScreen.js
 // Màn hình cập nhật thông tin cá nhân (displayName, bio, avatar)
@@ -29,24 +30,28 @@ export default function UpdateUserScreen({ navigation, route }) {
   };
 
   return (
-    <View style={{ padding: 16 }}>
-      <TouchableOpacity onPress={pickImage}>
-        <Image source={{ uri: avatar }} style={{ width: 100, height: 100, borderRadius: 50 }} />
-        <Text>Đổi Avatar</Text>
+    <View style={styles.container}>
+      <TouchableOpacity style={styles.avatarWrapper} onPress={pickImage}>
+        <Image source={{ uri: avatar }} style={styles.avatarImg} />
+        <Text style={styles.changeAvatarText}>Đổi Avatar</Text>
       </TouchableOpacity>
       <TextInput
         placeholder="Display Name"
         value={displayName}
         onChangeText={setDisplayName}
-        style={{ borderBottomWidth: 1, marginVertical: 8 }}
+        style={styles.input}
+        placeholderTextColor="#9ca3af"
       />
       <TextInput
         placeholder="Bio"
         value={bio}
         onChangeText={setBio}
-        style={{ borderBottomWidth: 1, marginVertical: 8 }}
+        style={styles.input}
+        placeholderTextColor="#9ca3af"
       />
-      <Button title="Lưu" onPress={handleSave} />
+      <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+        <Text style={styles.saveBtnText}>Lưu</Text>
+      </TouchableOpacity>
     </View>
   );
 }

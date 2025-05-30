@@ -1,46 +1,51 @@
 import React from 'react';
 import { Text, View, TouchableOpacity, Image, useColorScheme } from 'react-native';
+import styles from '../styles/LandingScreenStyles';
 
-// LandingScreen.js
 // Màn hình chào mừng/giới thiệu ứng dụng ByteX
 
-const App = () => {
+const LandingScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   return (
     <View
-      className={`flex-1 items-center justify-center ${
-        isDark ? 'bg-black' : 'bg-white'
-      }`}
+      style={[
+        styles.root,
+        isDark ? styles.rootDark : styles.rootLight
+      ]}
     >
       {/* Logo Section */}
-      <View className="flex-row items-center">
-        <Text className={`text-5xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>BYTE</Text>
-        <Text className="text-5xl font-bold text-green-500">X</Text>
+      <View style={styles.logoRow}>
+        <Text style={[
+          styles.logoText,
+          isDark ? styles.logoTextDark : styles.logoTextLight
+        ]}>BYTE</Text>
+        <Text style={styles.logoX}>X</Text>
       </View>
       
       {/* Hands Image */}
       <Image
-        source={{ uri: 'https://example.com/handshake-image.jpg' }} // Replace with actual image URL
-        className="w-24 h-24 my-4"
+        source={{ uri: 'https://example.com/handshake-image.jpg' }} // Thay link ảnh thực tế nếu cần
+        style={styles.image}
       />
       
       {/* Text Section */}
       <Text
-        className={`text-2xl text-center font-semibold mb-4 ${
-          isDark ? 'text-white' : 'text-black'
-        }`}
+        style={[
+          styles.title,
+          isDark ? styles.titleDark : styles.titleLight
+        ]}
       >
         Nơi Kết Nối Mọi Người Với Nhau
       </Text>
       
       {/* Button */}
-      <TouchableOpacity className="bg-green-500 rounded-lg px-8 py-2">
-        <Text className="text-white text-lg">Bắt Đầu</Text>
+      <TouchableOpacity style={styles.btn}>
+        <Text style={styles.btnText}>Bắt Đầu</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-export default App;
+export default LandingScreen;

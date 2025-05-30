@@ -1,0 +1,186 @@
+import { StyleSheet } from 'react-native';
+
+export default StyleSheet.create({
+  root: {
+    backgroundColor: '#fff',
+    flex: 1,
+    padding: 16,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 16,
+  },
+  headerBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#22c55e',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000',
+    marginLeft: 8,
+  },
+  headerPostBtn: {
+    marginLeft: 'auto',
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  headerPostBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  divider: {
+    borderBottomWidth: 1,
+    borderColor: 'rgba(0,0,0,0.3)',
+    marginBottom: 16,
+  },
+  userRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 16,
+  },
+  userAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#22c55e',
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#000',
+    marginBottom: 8,
+  },
+  userOptionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+  },
+  userOptionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e5e7eb',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  userOptionText: {
+    fontSize: 12,
+    color: '#000',
+    marginLeft: 4,
+  },
+  userTimeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e5e7eb',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 4,
+  },
+  userTimeText: {
+    fontSize: 12,
+    color: '#000',
+    marginLeft: 4,
+  },
+  postInput: {
+    marginTop: 12,
+    fontSize: 18,
+    color: '#000',
+    fontWeight: '400',
+  },
+  groupBtn: {
+    marginBottom: 24,
+  },
+  groupBtnItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#22c55e',
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 12,
+  },
+  groupBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  likeCommentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  likeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  likeText: {
+    marginLeft: 4,
+    color: '#2563eb',
+  },
+  commentIcon: {
+    marginRight: 4,
+  },
+  commentText: {
+    color: '#22c55e',
+    marginLeft: 4,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  commentInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    fontSize: 14,
+    backgroundColor: '#fff',
+  },
+  sendBtn: {
+    marginLeft: 8,
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  sendBtnText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  commentItem: {
+    marginBottom: 8,
+    padding: 8,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+  },
+  commentUser: {
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  commentContent: {
+    color: '#000',
+  },
+});

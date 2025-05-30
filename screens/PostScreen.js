@@ -15,6 +15,7 @@ import {
   faCommentDots,
 } from '@fortawesome/free-solid-svg-icons';
 import { addLike, getLikes, addComment, getComments } from '../services/CommentService';
+import styles from '../styles/PostScreenStyles';
 
 // PostScreen.js
 // Màn hình chi tiết bài viết, cho phép like, comment, hiển thị thông tin bài viết
@@ -63,107 +64,107 @@ export default function PostScreen({ route }) {
   }, []);
 
   return (
-    <ScrollView className="bg-white flex-1 p-4">
+    <ScrollView style={styles.root}>
       {/* Header */}
-      <View className="flex-row items-center mb-4 space-x-4">
-        <TouchableOpacity className="w-10 h-10 rounded-lg bg-green-500 justify-center items-center">
+      <View style={styles.headerRow}>
+        <TouchableOpacity style={styles.headerBtn}>
           <FontAwesomeIcon icon={faArrowLeft} size={16} color="white" />
         </TouchableOpacity>
-        <Text className="text-base font-normal text-black">Tạo bài viết</Text>
-        <TouchableOpacity className="ml-auto bg-green-500 px-4 py-2 rounded-full">
-          <Text className="text-white text-sm font-semibold">Đăng bài</Text>
+        <Text style={styles.headerTitle}>Tạo bài viết</Text>
+        <TouchableOpacity style={styles.headerPostBtn}>
+          <Text style={styles.headerPostBtnText}>Đăng bài</Text>
         </TouchableOpacity>
       </View>
 
-      <View className="border-b border-black border-opacity-30 mb-4" />
+      <View style={styles.divider} />
 
       {/* User info and post input */}
-      <View className="flex-row space-x-4 mb-4">
-        <View className="w-12 h-12 rounded-full border-2 border-green-500" />
-        <View className="flex-1">
-          <Text className="text-sm font-normal text-black mb-2">Tên Tài Khoản</Text>
-          <View className="flex-row flex-wrap mb-2 space-x-2">
-            <TouchableOpacity className="flex-row items-center bg-gray-300 rounded-full px-3 py-1">
+      <View style={styles.userRow}>
+        <View style={styles.userAvatar} />
+        <View style={styles.userInfo}>
+          <Text style={styles.userName}>Tên Tài Khoản</Text>
+          <View style={styles.userOptionsRow}>
+            <TouchableOpacity style={styles.userOptionBtn}>
               <FontAwesomeIcon icon={faUserFriends} size={12} color="black" />
-              <Text className="text-xs font-normal text-black ml-1">Bạn bè</Text>
+              <Text style={styles.userOptionText}>Bạn bè</Text>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center bg-gray-300 rounded-full px-3 py-1">
-              <Text className="text-xs font-normal text-black">+ Album</Text>
+            <TouchableOpacity style={styles.userOptionBtn}>
+              <Text style={styles.userOptionText}>+ Album</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity className="flex-row items-center bg-gray-300 rounded-full px-3 py-1">
+          <TouchableOpacity style={styles.userTimeBtn}>
             <FontAwesomeIcon icon={faClock} size={12} color="black" />
-            <Text className="text-xs font-normal text-black ml-1">Thời gian đăng</Text>
+            <Text style={styles.userTimeText}>Thời gian đăng</Text>
           </TouchableOpacity>
-          <Text className="mt-3 text-lg font-normal text-black">
+          <Text style={styles.postInput}>
             Bạn đang nghĩ gì ....
           </Text>
         </View>
       </View>
 
-      <View className="border-b border-black border-opacity-30 mb-4" />
+      <View style={styles.divider} />
 
       {/* Buttons group */}
-      <View className="space-y-3 max-w-max mb-6">
-        <TouchableOpacity className="flex-row items-center bg-green-500 rounded-full px-4 py-2">
+      <View style={styles.groupBtn}>
+        <TouchableOpacity style={styles.groupBtnItem}>
           <FontAwesomeIcon icon={faCamera} size={14} color="white" />
-          <Text className="text-white text-xs font-semibold ml-2">Ảnh/Video</Text>
+          <Text style={styles.groupBtnText}>Ảnh/Video</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center bg-green-500 rounded-full px-4 py-2">
+        <TouchableOpacity style={styles.groupBtnItem}>
           <FontAwesomeIcon icon={faUserPlus} size={14} color="white" />
-          <Text className="text-white text-xs font-semibold ml-2">Gắn thẻ người khác</Text>
+          <Text style={styles.groupBtnText}>Gắn thẻ người khác</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center bg-green-500 rounded-full px-4 py-2">
+        <TouchableOpacity style={styles.groupBtnItem}>
           <FontAwesomeIcon icon={faSmile} size={14} color="white" />
-          <Text className="text-white text-xs font-semibold ml-2">Cảm xúc/hoạt động</Text>
+          <Text style={styles.groupBtnText}>Cảm xúc/hoạt động</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center bg-green-500 rounded-full px-4 py-2">
+        <TouchableOpacity style={styles.groupBtnItem}>
           <FontAwesomeIcon icon={faMapMarkerAlt} size={14} color="white" />
-          <Text className="text-white text-xs font-semibold ml-2">Checkin</Text>
+          <Text style={styles.groupBtnText}>Checkin</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center bg-green-500 rounded-full px-4 py-2">
+        <TouchableOpacity style={styles.groupBtnItem}>
           <FontAwesomeIcon icon={faVideo} size={14} color="white" />
-          <Text className="text-white text-xs font-semibold ml-2">Video trực tiếp</Text>
+          <Text style={styles.groupBtnText}>Video trực tiếp</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center bg-green-500 rounded-full px-4 py-2">
+        <TouchableOpacity style={styles.groupBtnItem}>
           <FontAwesomeIcon icon={faTh} size={14} color="white" />
-          <Text className="text-white text-xs font-semibold ml-2">Màu nền</Text>
+          <Text style={styles.groupBtnText}>Màu nền</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center bg-green-500 rounded-full px-4 py-2">
+        <TouchableOpacity style={styles.groupBtnItem}>
           <FontAwesomeIcon icon={faCamera} size={14} color="white" />
-          <Text className="text-white text-xs font-semibold ml-2">Camera</Text>
+          <Text style={styles.groupBtnText}>Camera</Text>
         </TouchableOpacity>
       </View>
 
       {/* Like & Comment section */}
-      <View className="flex-row items-center mb-2">
-        <TouchableOpacity onPress={handleLike} className="flex-row items-center mr-4">
+      <View style={styles.likeCommentRow}>
+        <TouchableOpacity onPress={handleLike} style={styles.likeBtn}>
           <FontAwesomeIcon icon={faThumbsUp} size={18} color="#2563eb" />
-          <Text className="ml-1 text-blue-600">{likes.length} Like</Text>
+          <Text style={styles.likeText}>{likes.length} Like</Text>
         </TouchableOpacity>
-        <FontAwesomeIcon icon={faCommentDots} size={18} color="#22c55e" />
-        <Text className="ml-1 text-green-600">{comments.length} Comment</Text>
+        <FontAwesomeIcon icon={faCommentDots} size={18} color="#22c55e" style={styles.commentIcon} />
+        <Text style={styles.commentText}>{comments.length} Comment</Text>
       </View>
 
       {/* Comment input */}
-      <View className="flex-row items-center mb-4">
+      <View style={styles.commentInputRow}>
         <TextInput
           value={commentText}
           onChangeText={setCommentText}
           placeholder="Nhập bình luận..."
-          className="flex-1 border px-2 py-1 rounded"
+          style={styles.commentInput}
         />
-        <TouchableOpacity onPress={handleComment} className="ml-2 bg-green-500 px-4 py-2 rounded-full">
-          <Text className="text-white">Gửi</Text>
+        <TouchableOpacity onPress={handleComment} style={styles.sendBtn}>
+          <Text style={styles.sendBtnText}>Gửi</Text>
         </TouchableOpacity>
       </View>
 
       {/* Danh sách comment */}
       <View>
         {comments.map((cmt, idx) => (
-          <View key={idx} className="mb-2 p-2 bg-gray-100 rounded">
-            <Text className="font-semibold">{cmt.userId}</Text>
-            <Text>{cmt.text}</Text>
+          <View key={idx} style={styles.commentItem}>
+            <Text style={styles.commentUser}>{cmt.userId}</Text>
+            <Text style={styles.commentContent}>{cmt.text}</Text>
           </View>
         ))}
       </View>

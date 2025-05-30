@@ -1,61 +1,43 @@
-import React from 'react';
-import { View, Text, Switch, TouchableOpacity } from 'react-native';
-import { TailwindProvider } from 'nativewind';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Switch } from 'react-native';
+import styles from '../styles/MenuFunctionStyles';
 
-// MenuFunction.js
-// Menu chức năng: danh sách bài đăng, thay avatar, chuyển chế độ sáng/tối, đăng xuất
-
-const App = () => {
-  const [isDarkMode, setIsDarkMode] = React.useState(false);
-
-  const toggleSwitch = () => setIsDarkMode(previousState => !previousState);
+const MenuFunction = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   return (
-    <TailwindProvider>
-      <View className={`flex-1 justify-center items-center p-5 ${isDarkMode ? 'bg-[#18181b]' : 'bg-white'}`}>
-        
-        {/* Danh Sách Bài Đăng */}
-        <View className={`flex-row justify-between items-center w-full border-b py-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <Text className={`text-lg ${isDarkMode ? 'text-white' : 'text-black'}`}>Danh Sách Bài Đăng</Text>
-          <TouchableOpacity>
-            <Text className="text-blue-500"></Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Thay Ảnh Avatar */}
-        <View className={`flex-row justify-between items-center w-full border-b py-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <Text className={`text-lg ${isDarkMode ? 'text-white' : 'text-black'}`}>Thay Ảnh Avatar</Text>
-          <TouchableOpacity>
-            <Text className="text-blue-500"></Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Chế Độ Sáng/Tối */}
-        <View className={`flex-row justify-between items-center w-full border-b py-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <Text className={`text-lg ${isDarkMode ? 'text-white' : 'text-black'}`}>Chế Độ Sáng/Tối</Text>
-          <Switch
-            onValueChange={toggleSwitch}
-            value={isDarkMode}
-            trackColor={{ false: "#767577", true: "#81b0ff" }}
-            thumbColor={isDarkMode ? "#f5dd4b" : "#f4f3f4"}
-          />
-        </View>
-
-        {/* Nút Đăng Xuất */}
-        <TouchableOpacity className="mt-5 bg-green-500 rounded-lg px-4 py-2">
-          <Text className="text-white text-lg text-center">Đăng Xuất</Text>
-        </TouchableOpacity>
-
-        {/* Nút Quay Lại */}
-        <TouchableOpacity className={`mt-5 rounded-lg px-4 py-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
-          <Text className={`text-lg text-center ${isDarkMode ? 'text-white' : 'text-black'}`}>←</Text>
-        </TouchableOpacity>
-        
+    <View style={[styles.menuRoot, isDarkMode && styles.menuRootDark]}>
+      {/* Danh Sách Bài Đăng */}
+      <View style={[styles.menuRow, isDarkMode && styles.menuRowDark]}>
+        <Text style={[styles.menuLabel, isDarkMode && styles.menuLabelDark]}>Danh Sách Bài Đăng</Text>
+        <TouchableOpacity style={styles.menuBtn} />
       </View>
-    </TailwindProvider>
+      {/* Thay Ảnh Avatar */}
+      <View style={[styles.menuRow, isDarkMode && styles.menuRowDark]}>
+        <Text style={[styles.menuLabel, isDarkMode && styles.menuLabelDark]}>Thay Ảnh Avatar</Text>
+        <TouchableOpacity style={styles.menuBtn} />
+      </View>
+      {/* Chế Độ Sáng/Tối */}
+      <View style={[styles.menuRow, isDarkMode && styles.menuRowDark]}>
+        <Text style={[styles.menuLabel, isDarkMode && styles.menuLabelDark]}>Chế Độ Sáng/Tối</Text>
+        <Switch
+          value={isDarkMode}
+          onValueChange={() => setIsDarkMode(v => !v)}
+          style={{ transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }] }}
+        />
+      </View>
+      {/* Nút Đăng Xuất */}
+      <TouchableOpacity style={styles.menuLogout}>
+        <Text style={styles.menuLogoutText}>Đăng Xuất</Text>
+      </TouchableOpacity>
+      {/* Nút Quay Lại */}
+      <TouchableOpacity style={[styles.menuBack, isDarkMode && styles.menuBackDark]}>
+        <Text style={[styles.menuBackText, isDarkMode && styles.menuBackTextDark]}>←</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
-export default App;
+export default MenuFunction;
 
 

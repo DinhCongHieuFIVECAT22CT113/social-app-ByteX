@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TextInput, TouchableOpacity, Text, useColorScheme } from 'react-native';
+import styles from '../styles/ModalPasswordStyles';
 
-// ModalPassword.js
 // Modal xác nhận mật khẩu mới
 
 const ConfirmPasswordScreen = () => {
@@ -9,31 +9,31 @@ const ConfirmPasswordScreen = () => {
   const isDark = colorScheme === 'dark';
 
   return (
-    <View className={`flex-1 justify-center items-center p-4 ${isDark ? 'bg-[#18181b]' : 'bg-white'}`}>
-      <TouchableOpacity className="flex-row items-center mb-6">
-        <Text className="text-green-500 text-lg">&lt;</Text>
+    <View style={[styles.container, isDark && styles.containerDark]}>
+      <TouchableOpacity style={styles.backBtn}>
+        <Text style={styles.backIcon}>&lt;</Text>
       </TouchableOpacity>
       
-      <View className="w-full mb-4">
+      <View style={styles.inputWrapper}>
         <TextInput 
           placeholder="Nhập Mật Khẩu của Bạn" 
           secureTextEntry 
-          className={`border rounded-lg p-2 ${isDark ? 'border-gray-700 text-white bg-[#232326]' : 'border-gray-300 text-black bg-white'}`}
+          style={[styles.input, isDark && styles.inputDark]}
           placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
         />
       </View>
       
-      <View className="w-full mb-4">
+      <View style={styles.inputWrapper}>
         <TextInput 
           placeholder="Nhập Lại Mật Khẩu của Bạn" 
           secureTextEntry 
-          className={`border rounded-lg p-2 ${isDark ? 'border-gray-700 text-white bg-[#232326]' : 'border-gray-300 text-black bg-white'}`}
+          style={[styles.input, isDark && styles.inputDark]}
           placeholderTextColor={isDark ? "#9ca3af" : "#6b7280"}
         />
       </View>
       
-      <TouchableOpacity className="bg-green-500 w-full rounded-lg p-2">
-        <Text className="text-white text-center text-lg">Xác Nhận</Text>
+      <TouchableOpacity style={styles.confirmBtn}>
+        <Text style={styles.confirmBtnText}>Xác Nhận</Text>
       </TouchableOpacity>
     </View>
   );

@@ -1,100 +1,82 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, useColorScheme } from 'react-native';
-import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faClock, faHeart as faHeartSolid, faCommentAlt, faShareAlt } from '@fortawesome/free-solid-svg-icons';
-import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons';
+import styles from '../styles/CommentsScreenStyles';
+// import Icon from 'react-native-vector-icons/FontAwesome'; // hoặc thư viện icon bạn dùng
 
-// CommentsScreen.js
-// Màn hình hiển thị chi tiết comment, like, share cho một bài viết
-
-export default function Post() {
+export default function CommentsScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   return (
-    <ScrollView className={`${isDark ? 'bg-[#18181b]' : 'bg-white'} p-4 flex-1`}>
-      <View className={`rounded-md p-4 space-y-4 max-w-md mx-auto w-full border ${isDark ? 'border-gray-700' : 'border-black'}`}>
+    <ScrollView style={[styles.root, isDark && styles.rootDark]}>
+      <View style={[styles.card, isDark && styles.cardDark]}>
         {/* Header */}
-        <View className="flex flex-row items-center space-x-3">
-          <View className="w-10 h-10 rounded-full border-2 border-green-500"></View>
+        <View style={styles.headerRow}>
+          <View style={styles.avatar} />
           <View>
-            <Text className={`text-base font-semibold leading-tight ${isDark ? 'text-white' : 'text-black'}`}>Tên Tài Khoản</Text>
-            <View className={`${isDark ? 'bg-gray-700' : 'bg-gray-300'} flex flex-row items-center rounded-full px-3 py-1 mt-1`}>
-              <FontAwesomeIcon icon={faClock} size={12} style={{ color: isDark ? 'white' : 'black', marginRight: 4 }} />
-              <Text className={`text-xs ${isDark ? 'text-gray-200' : 'text-black'}`}>Thời gian đăng</Text>
+            <Text style={[styles.author, isDark && styles.authorDark]}>Tên Tài Khoản</Text>
+            <View style={styles.timeRow}>
+              {/* <Icon name="clock-o" size={12} color={isDark ? 'white' : 'black'} style={{ marginRight: 4 }} /> */}
+              <Text style={[styles.timeText, isDark && styles.timeTextDark]}>Thời gian đăng</Text>
             </View>
           </View>
         </View>
-
         {/* Image */}
         <Image
           source={{ uri: 'https://storage.googleapis.com/a1aa/image/67c7c8ae-8b93-420a-1a52-62d4ef5fc981.jpg' }}
-          className="w-full h-80 rounded-2xl"
-          accessibilityLabel="Square placeholder image with light gray background and rounded corners"
+          style={styles.mainImg}
         />
-
         {/* Likes, comments, shares */}
-        <View className={`flex flex-row justify-between text-green-500 text-sm font-normal`}>
-          <View className="flex flex-row items-center space-x-1">
-            <Text className={isDark ? 'text-green-400' : 'text-green-600'}>56</Text>
-            <FontAwesomeIcon icon={faHeartRegular} size={14} style={{ color: '#22c55e' }} />
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Text style={isDark ? styles.green400 : styles.green600}>56</Text>
+            {/* <Icon name="heart-o" size={14} color="#22c55e" /> */}
           </View>
-
-          <View className="flex flex-row items-center space-x-1 ml-auto mr-10">
-            <Text className={isDark ? 'text-gray-200' : 'text-black'}>45 Bình luận</Text>
+          <View style={[styles.stat, styles.statCenter]}>
+            <Text style={isDark ? styles.gray200 : styles.black}>45 Bình luận</Text>
           </View>
-
-          <View className="flex flex-row items-center space-x-1">
-            <Text className={isDark ? 'text-green-400' : 'text-green-600'}>56</Text>
-            <FontAwesomeIcon icon={faShareAlt} size={14} style={{ color: '#22c55e' }} />
+          <View style={styles.stat}>
+            <Text style={isDark ? styles.green400 : styles.green600}>56</Text>
+            {/* <Icon name="share-alt" size={14} color="#22c55e" /> */}
           </View>
         </View>
-
-        <View className={`border-t ${isDark ? 'border-gray-700' : 'border-black'}`} />
-
+        <View style={[styles.divider, isDark && styles.dividerDark]} />
         {/* Buttons */}
-        <View className="flex flex-row justify-between space-x-2">
-          <TouchableOpacity className="flex flex-row items-center justify-center space-x-2 bg-green-500 rounded-full px-5 py-2 w-28">
-            <FontAwesomeIcon icon={faHeartSolid} size={14} color="white" />
-            <Text className="text-white font-semibold">Thích</Text>
+        <View style={styles.btnRow}>
+          <TouchableOpacity style={styles.btn}>
+            {/* <Icon name="heart" size={14} color="white" /> */}
+            <Text style={styles.btnLabel}>Thích</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity className="flex flex-row items-center justify-center space-x-2 bg-green-500 rounded-full px-5 py-2 w-36">
-            <FontAwesomeIcon icon={faCommentAlt} size={14} color="white" />
-            <Text className="text-white font-semibold">Bình luận</Text>
+          <TouchableOpacity style={[styles.btn, styles.btnWide]}>
+            {/* <Icon name="comment" size={14} color="white" /> */}
+            <Text style={styles.btnLabel}>Bình luận</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity className="flex flex-row items-center justify-center space-x-2 bg-green-500 rounded-full px-5 py-2 w-28">
-            <FontAwesomeIcon icon={faShareAlt} size={14} color="white" />
-            <Text className="text-white font-semibold">Chia sẻ</Text>
+          <TouchableOpacity style={styles.btn}>
+            {/* <Icon name="share-alt" size={14} color="white" /> */}
+            <Text style={styles.btnLabel}>Chia sẻ</Text>
           </TouchableOpacity>
         </View>
-
-        <View className={`border-t ${isDark ? 'border-gray-700' : 'border-black'}`} />
-
+        <View style={[styles.divider, isDark && styles.dividerDark]} />
         {/* Comments */}
-        <View className="space-y-3">
-          <View className="flex flex-row space-x-3">
+        <View style={styles.list}>
+          <View style={styles.commentRow}>
             <Image
               source={{ uri: 'https://storage.googleapis.com/a1aa/image/22e34a68-d06c-44a0-36e7-7f85ed804684.jpg' }}
-              className="w-10 h-10 rounded-full"
-              accessibilityLabel="User avatar of a man with short hair and smiling face"
+              style={styles.commentAvatar}
             />
-            <View className={`${isDark ? 'bg-[#232326] border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-3 max-w-[280px]`}>
-              <Text className={`text-xs leading-tight ${isDark ? 'text-gray-200' : 'text-black'}`}>
+            <View style={[styles.commentBubble, isDark && styles.commentBubbleDark]}>
+              <Text style={[styles.commentText, isDark && styles.commentTextDark]}>
                 Its great, UK is awesome, especially London. New job is good so far! How about you?
               </Text>
             </View>
           </View>
-
-          <View className="flex flex-row space-x-3">
+          <View style={styles.commentRow}>
             <Image
               source={{ uri: 'https://storage.googleapis.com/a1aa/image/22e34a68-d06c-44a0-36e7-7f85ed804684.jpg' }}
-              className="w-10 h-10 rounded-full"
-              accessibilityLabel="User avatar of a man with short hair and smiling face"
+              style={styles.commentAvatar}
             />
-            <View className={`${isDark ? 'bg-[#232326] border-gray-700' : 'bg-white border-gray-200'} border rounded-xl p-3 max-w-[280px]`}>
-              <Text className={`text-xs leading-tight ${isDark ? 'text-gray-200' : 'text-black'}`}>
+            <View style={[styles.commentBubble, isDark && styles.commentBubbleDark]}>
+              <Text style={[styles.commentText, isDark && styles.commentTextDark]}>
                 Its great, UK is awesome, especially London. New job is good so far! How about you?
               </Text>
             </View>

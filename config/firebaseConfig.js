@@ -20,7 +20,7 @@ const firebaseConfig = {
 
 // Khởi tạo app Firebase với config ở trên
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
 
 // Khởi tạo các service Firebase bạn sẽ dùng
 export const auth = getAuth(app);          // Xác thực người dùng (Auth)

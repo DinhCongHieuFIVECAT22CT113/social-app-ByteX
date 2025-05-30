@@ -1,24 +1,18 @@
-// App.js
-// Điểm khởi đầu của ứng dụng, cấu hình navigation và các màn hình chính
-
 import React from 'react';
+import { View, Text } from 'react-native';
 import AppNavigator from './navigation/navigation';
 import UpdateUserScreen from './screens/UpdateUserScreen';
-// Import LikeButton từ đúng đường dẫn
 import LikeButton from './components/LikeButton';
 
 export default function App() {
   return (
-    <AppNavigator>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="UpdateUser" component={UpdateUserScreen} />
-      </Stack.Navigator>
-      <div>
-        <h1>Social App ByteX</h1>
-        {/* Sử dụng nút Like */}
+    <View style={{ flex: 1 }}>
+      <AppNavigator />
+      {/* Nếu muốn hiển thị LikeButton và tiêu đề ở ngoài navigation */}
+      <View style={{ alignItems: 'center', marginTop: 20 }}>
+        <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Social App ByteX</Text>
         <LikeButton />
-      </div>
-    </AppNavigator>
+      </View>
+    </View>
   );
 }

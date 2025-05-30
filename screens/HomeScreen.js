@@ -3,16 +3,8 @@ import {
   View, Text, Image, TouchableOpacity,
   ActivityIndicator, FlatList, useColorScheme
 } from 'react-native';
-import { styled } from 'nativewind';
 import { getPostsPaginated } from '../services/PostService';
-
-// HomeScreen.js
-// Màn hình chính hiển thị danh sách bài viết (news feed), hỗ trợ phân trang, dark mode
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledImage = styled(Image);
-const StyledTouchableOpacity = styled(TouchableOpacity);
+import styles from '../styles/HomeScreenStyles';
 
 const PAGE_SIZE = 5;
 
@@ -37,57 +29,64 @@ export default function HomeScreen() {
       setPosts(prev => [...prev, ...newPosts]);
       setLastDoc(lastVisible);
       setLoading(false);
-    }, 1000); // Giả lập delay
+    }, 1000);
   };
 
   const renderItem = ({ item }) => (
-    <StyledView className={`mt-6 rounded-lg shadow p-4 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
-      <StyledView className="flex-row items-center space-x-3">
-        <StyledView className="relative">
-          <StyledImage
+    <View style={[
+      styles.card,
+      isDark && styles.cardDark
+    ]}>
+      <View style={styles.row}>
+        <View style={styles.avatarWrapper}>
+          <Image
             source={{ uri: item.avatar || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg' }}
-            className="w-10 h-10 rounded-full"
+            style={styles.avatar}
           />
-          <StyledView className="absolute bottom-0 right-0 w-3 h-3 bg-[#2ecc40] border-2 border-white rounded-full" />
-        </StyledView>
-        <View>
-          <StyledText className={`text-sm font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{item.author || 'Tên Tài Khoản'}</StyledText>
-          <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            {item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}
-          </StyledText>
+          <View style={styles.avatarStatus} />
         </View>
-        <StyledTouchableOpacity className={`ml-auto border rounded-full px-4 py-1 ${isDark ? 'border-gray-600' : 'border-gray-300'}`}>
-          <StyledText className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>Following</StyledText>
-        </StyledTouchableOpacity>
-      </StyledView>
+        <View>
+          <Text style={[styles.author, isDark && styles.authorDark]}>{item.author || 'Tên Tài Khoản'}</Text>
+          <Text style={[styles.time, isDark && styles.timeDark]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}
+          </Text>
+        </View>
+        <TouchableOpacity style={[
+          styles.followBtn,
+          isDark && styles.followBtnDark
+        ]}>
+          <Text style={[styles.followBtnText, isDark && styles.followBtnTextDark]}>Following</Text>
+        </TouchableOpacity>
+      </View>
 
       {item.image && (
-        <StyledImage
+        <Image
           source={{ uri: item.image }}
-          className="mt-4 rounded-lg w-full h-64"
+          style={styles.postImage}
           resizeMode="cover"
         />
       )}
 
-      <StyledText className={`mt-4 text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-        {item.content || ''}
-      </StyledText>
+      <Text style={[styles.content, isDark && styles.contentDark]}>{item.content || ''}</Text>
 
-      <StyledView className={`flex-row space-x-6 mt-4 text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-        <StyledTouchableOpacity className="flex-row items-center space-x-1">
-          <StyledText>🔁</StyledText>
-          <StyledText>{item.shares || 0}</StyledText>
-        </StyledTouchableOpacity>
-        <StyledTouchableOpacity className="flex-row items-center space-x-1">
-          <StyledText>♡</StyledText>
-          <StyledText>{item.likes || 0}</StyledText>
-        </StyledTouchableOpacity>
-        <StyledTouchableOpacity className="flex-row items-center space-x-1">
-          <StyledText>💬</StyledText>
-          <StyledText>{item.comments || 0}</StyledText>
-        </StyledTouchableOpacity>
-      </StyledView>
-    </StyledView>
+      <View style={styles.actionsRow}>
+        <TouchableOpacity style={styles.actionBtn}>
+          <Text>🔁</Text>
+          <Text style={styles.actionText}>{item.shares || 0}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn}>
+          <Text>♡</Text>
+          <Text style={styles.actionText}>{item.likes || 0}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionBtn}>
+          <Text>💬</Text>
+          <Text style={styles.actionText}>{item.comments || 0}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 
   return (
@@ -95,35 +94,35 @@ export default function HomeScreen() {
       data={posts}
       keyExtractor={item => item.id}
       renderItem={renderItem}
-      contentContainerStyle={{
-        padding: 16,
-        backgroundColor: isDark ? '#18181b' : 'white',
-      }}
+      contentContainerStyle={[
+        styles.container,
+        isDark && styles.containerDark
+      ]}
       onEndReached={loadMorePosts}
       onEndReachedThreshold={0.2}
       ListHeaderComponent={
         <>
-          <StyledView className={`flex-row justify-between items-center border-b pb-2 ${isDark ? 'border-gray-700' : 'border-gray-400'}`}>
-            <StyledView className="flex-row items-center space-x-4">
-              <StyledView className="w-12 h-12 rounded-full border-2 border-[#2ecc40]" />
+          <View style={[styles.header, isDark && styles.headerDark]}>
+            <View style={styles.headerLeft}>
+              <View style={styles.headerAvatar} />
               <View>
-                <StyledText className={`text-sm ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>Tên Tài Khoản</StyledText>
-                <StyledText className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Email@gmail.com</StyledText>
+                <Text style={[styles.headerName, isDark && styles.headerNameDark]}>Tên Tài Khoản</Text>
+                <Text style={[styles.headerEmail, isDark && styles.headerEmailDark]}>Email@gmail.com</Text>
               </View>
-            </StyledView>
-            <StyledTouchableOpacity>
-              <StyledText className={`${isDark ? 'text-gray-300' : 'text-gray-600'} text-lg`}>›</StyledText>
-            </StyledTouchableOpacity>
-          </StyledView>
+            </View>
+            <TouchableOpacity>
+              <Text style={[styles.headerIcon, isDark && styles.headerIconDark]}>›</Text>
+            </TouchableOpacity>
+          </View>
 
-          <StyledView className="flex justify-center mt-4">
-            <StyledTouchableOpacity className={`${isDark ? 'bg-gray-700' : 'bg-gray-300'} rounded-full px-4 py-1`}>
-              <StyledText className={`text-xs ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>Chia Sẻ Trạng Thái của Bạn ....</StyledText>
-            </StyledTouchableOpacity>
-          </StyledView>
+          <View style={styles.shareRow}>
+            <TouchableOpacity style={[styles.shareBtn, isDark && styles.shareBtnDark]}>
+              <Text style={[styles.shareBtnText, isDark && styles.shareBtnTextDark]}>Chia Sẻ Trạng Thái của Bạn ....</Text>
+            </TouchableOpacity>
+          </View>
         </>
       }
-      ListFooterComponent={loading ? <ActivityIndicator size="small" /> : null}
+      ListFooterComponent={loading ? <ActivityIndicator size="small" color={isDark ? '#fff' : '#000'} /> : null}
     />
   );
 }
