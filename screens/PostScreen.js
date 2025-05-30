@@ -18,6 +18,7 @@ import { addLike, getLikes, addComment, getComments } from '../services/CommentS
 import * as ImagePicker from 'expo-image-picker';
 import ImageService from '../services/ImageService';
 import { addPost } from '../services/PostService';
+import { auth } from '../config/firebaseConfig';
 import styles from '../styles/PostScreenStyles';
 
 // PostScreen.js
@@ -81,23 +82,45 @@ export default function PostScreen({ route, navigation }) {
       Alert.alert('Lỗi', 'Vui lòng nhập nội dung hoặc chọn ảnh!');
       return;
     }
+    
     let imageUrl = '';
     try {
+      // Lấy thông tin người dùng hiện tại từ Firebase Auth
+      const user = auth.currentUser;
+      if (!user) {
+        Alert.alert('Lỗi', 'Bạn cần đăng nhập để đăng bài!');
+        navigation.navigate('Login');
+        return;
+      }
+      
+      // Upload ảnh nếu có
       if (image) {
         imageUrl = await ImageService.uploadImageAsync(image, `posts/${Date.now()}.jpg`);
       }
+      
+      // Tạo bài viết mới với đầy đủ thông tin
       await addPost({
-        author: userId,
+        author: user.displayName || 'Người dùng ByteX',
+        userId: user.uid,
         caption,
+        content: caption, // Thêm trường content để tương thích với HomeScreen
         image: imageUrl,
         createdAt: Date.now(),
+        avatar: user.photoURL || null, // Thêm avatar người đăng
+        displayName: user.displayName || 'Người dùng ByteX', // Thêm tên hiển thị
+        email: user.email || '', // Thêm email người đăng
       });
+      
+      // Reset form và thông báo thành công
       setCaption('');
       setImage(null);
       Alert.alert('Thành công', 'Đăng bài thành công!');
+      
+      // Quay lại màn hình trước đó
       if (navigation) navigation.goBack();
     } catch (e) {
-      Alert.alert('Lỗi', 'Đăng bài thất bại!');
+      console.error('Error posting:', e);
+      Alert.alert('Lỗi', 'Đăng bài thất bại! ' + e.message);
     }
   };
 

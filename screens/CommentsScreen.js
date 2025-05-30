@@ -110,34 +110,63 @@ export default function CommentsScreen({ route }) {
         <View style={styles.list}>
           {comments.map((cmt, idx) => (
             <View key={idx} style={styles.commentRow}>
-              {/* TODO: Lấy avatar thực từ cmt.avatar nếu có */}
               <Image
                 source={{ uri: cmt.avatar || 'https://storage.googleapis.com/a1aa/image/22e34a68-d06c-44a0-36e7-7f85ed804684.jpg' }}
                 style={styles.commentAvatar}
+                onError={(e) => {
+                  console.log("Error loading comment avatar:", e.nativeEvent.error);
+                }}
               />
               <View style={[styles.commentBubble, isDark && styles.commentBubbleDark]}>
-                {/* TODO: Lấy tên thực từ cmt.displayName nếu có */}
+                {cmt.displayName && (
+                  <Text style={[styles.commentAuthor, isDark && styles.commentAuthorDark]}>
+                    {cmt.displayName}
+                  </Text>
+                )}
                 <Text style={[styles.commentText, isDark && styles.commentTextDark]}>
                   {cmt.text}
                 </Text>
+                {cmt.createdAt && (
+                  <Text style={styles.commentTime}>
+                    {new Date(cmt.createdAt).toLocaleString()}
+                  </Text>
+                )}
               </View>
             </View>
           ))}
+          
+          {comments.length === 0 && (
+            <View style={{ alignItems: 'center', marginVertical: 20 }}>
+              <Text style={{ color: isDark ? '#9ca3af' : '#6b7280', fontSize: 14 }}>
+                Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
+              </Text>
+            </View>
+          )}
         </View>
+        
         {/* Add comment input */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}>
+        <View style={styles.commentInputContainer}>
           <TextInput
-            style={{ flex: 1, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 8, padding: 8, color: isDark ? '#fff' : '#000', backgroundColor: isDark ? '#232326' : '#fff' }}
+            style={[
+              styles.commentInput,
+              isDark && styles.commentInputDark
+            ]}
             value={commentText}
             onChangeText={setCommentText}
             placeholder="Nhập bình luận..."
             placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
+            multiline
           />
-          <TouchableOpacity onPress={handleAddComment} style={{ marginLeft: 8, backgroundColor: '#22c55e', borderRadius: 8, padding: 10 }}>
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Gửi</Text>
+          <TouchableOpacity 
+            onPress={handleAddComment} 
+            style={styles.sendButton}
+            disabled={!commentText.trim()}
+          >
+            <Text style={styles.sendButtonText}>Gửi</Text>
           </TouchableOpacity>
         </View>
-        {error ? <Text style={{ color: 'red', marginTop: 8 }}>{error}</Text> : null}
+        
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
       </View>
     </ScrollView>
   );

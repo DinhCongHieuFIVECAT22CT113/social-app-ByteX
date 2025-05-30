@@ -48,10 +48,20 @@ export async function login(email, password) {
 // Xóa cache/local user info nếu có
 // =======================
 export async function logout() {
-  // Đăng xuất tài khoản hiện tại
-  await signOut(auth);
-  // Xóa cache/local user info nếu có
-  await AsyncStorage.clear();
+  try {
+    // Đăng xuất tài khoản hiện tại
+    await signOut(auth);
+    
+    // Xóa thông tin người dùng từ AsyncStorage
+    const keys = ['user_data', 'user_settings', 'user_preferences'];
+    await AsyncStorage.multiRemove(keys);
+    
+    console.log("Đăng xuất thành công");
+    return true;
+  } catch (error) {
+    console.error("Lỗi khi đăng xuất:", error);
+    throw error;
+  }
 }
 
 // =======================
@@ -59,10 +69,23 @@ export async function logout() {
 // navigation: đối tượng điều hướng (navigation)
 // =======================
 export const handleLogout = async (navigation) => {
-  // Gọi hàm logout để đăng xuất
-  await logout();
-  // Chuyển hướng về màn hình đăng nhập
-  navigation.replace('Login');
+  try {
+    // Gọi hàm logout để đăng xuất
+    await logout();
+    
+    // Chuyển hướng về màn hình đăng nhập
+    if (navigation) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Welcome' }],
+      });
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Lỗi khi xử lý đăng xuất:", error);
+    return false;
+  }
 };
 
 // =======================
