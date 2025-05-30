@@ -96,9 +96,14 @@ export const handleLogout = async (navigation) => {
 // =======================
 async function handleChangeAvatar() {
   // 1. Chọn ảnh từ thư viện
-  const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images });
+  const result = await ImagePicker.launchImageLibraryAsync({ 
+    mediaTypes: [ImagePicker.MediaType.IMAGE],
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  });
   // Nếu người dùng hủy bỏ, thoát hàm
-  if (result.cancelled) return;
+  if (result.canceled || !result.assets || result.assets.length === 0) return;
 
   const uri = result.assets[0].uri; // Expo SDK 48+
   // SỬA: Luôn dùng biến auth đã khởi tạo từ firebaseConfig thay vì tạo mới bằng getAuth(app)

@@ -66,7 +66,7 @@ export default function PostScreen({ route, navigation }) {
   // Chọn ảnh từ thư viện
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: [ImagePicker.MediaType.IMAGE],
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,

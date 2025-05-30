@@ -4,7 +4,7 @@ import {
   ActivityIndicator, FlatList, useColorScheme, Vibration,
   RefreshControl, StatusBar, Alert
 } from 'react-native';
-import { getPostsPaginated, listenToPosts } from '../services/PostService';
+import * as PostService from '../services/PostService';
 import { getLikes, getComments } from '../services/CommentService';
 import { likePost } from '../services/PostInteractionService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -51,14 +51,16 @@ export default function HomeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       if (realtimeEnabled) {
-        const unsubscribe = listenToPosts((newPosts) => {
+        const unsubscribe = PostService.listenToPosts((newPosts) => {
           if (newPosts && newPosts.length > 0) {
             setPosts(newPosts);
           }
         }, PAGE_SIZE);
         
         return () => {
-          unsubscribe();
+          if (unsubscribe) {
+            unsubscribe();
+          }
         };
       } else {
         loadMorePosts(true);
@@ -97,7 +99,7 @@ export default function HomeScreen() {
     }
     
     try {
-      const { posts: newPosts, lastVisible } = await getPostsPaginated(PAGE_SIZE, refresh ? null : lastDoc);
+      const { posts: newPosts, lastVisible } = await PostService.getPostsPaginated(PAGE_SIZE, refresh ? null : lastDoc);
       if (newPosts.length === 0) {
         setNoMore(true);
       } else {
