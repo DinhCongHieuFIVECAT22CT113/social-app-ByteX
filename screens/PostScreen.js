@@ -183,7 +183,7 @@ export default function PostScreen({ route }) {
   const pickImage = async () => {
     try {
       let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: [ImagePicker.MediaType.Images],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Sửa lại đúng enum
         allowsEditing: true,
         aspect: [4, 3],
         quality: 1,
@@ -305,10 +305,9 @@ export default function PostScreen({ route }) {
       <View style={styles.divider} />
 
       {/* User info and post input */}
-      <View style={styles.userRow}>
-        {postId === 'testPostId' ? (
-          // Hiển thị thông tin người dùng hiện tại khi tạo bài viết mới
-          <>
+      {postId === 'testPostId' ? (
+        <>
+          <View style={styles.userRow}>
             <View style={styles.userAvatar} />
             <View style={styles.userInfo}>
               <Text style={styles.userName}>{auth.currentUser?.displayName || 'Tên Tài Khoản'}</Text>
@@ -326,13 +325,60 @@ export default function PostScreen({ route }) {
                 <Text style={styles.userTimeText}>Thời gian đăng</Text>
               </TouchableOpacity>
             </View>
-          </>
-        ) : (
-          // Hiển thị thông tin bài viết khi xem chi tiết
-          <>
-            <Image 
-              source={{ 
-                uri: post?.avatar || post?.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg' 
+          </View>
+          <View style={styles.userInfo}>
+            <TextInput
+              style={styles.postInput}
+              placeholder="Bạn đang nghĩ gì ..."
+              value={caption}
+              onChangeText={setCaption}
+              multiline
+            />
+            {image && (
+              <Image
+                source={{ uri: image }}
+                style={{ width: '100%', height: 200, borderRadius: 12, marginTop: 12 }}
+              />
+            )}
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.groupBtn}>
+            <TouchableOpacity style={styles.groupBtnItem} onPress={pickImage}>
+              <FontAwesomeIcon icon={faCamera} size={14} color="white" />
+              <Text style={styles.groupBtnText}>Ảnh/Video</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.groupBtnItem}>
+              <FontAwesomeIcon icon={faUserPlus} size={14} color="white" />
+              <Text style={styles.groupBtnText}>Gắn thẻ người khác</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.groupBtnItem}>
+              <FontAwesomeIcon icon={faSmile} size={14} color="white" />
+              <Text style={styles.groupBtnText}>Cảm xúc/hoạt động</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.groupBtnItem}>
+              <FontAwesomeIcon icon={faMapMarkerAlt} size={14} color="white" />
+              <Text style={styles.groupBtnText}>Checkin</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.groupBtnItem}>
+              <FontAwesomeIcon icon={faVideo} size={14} color="white" />
+              <Text style={styles.groupBtnText}>Video trực tiếp</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.groupBtnItem}>
+              <FontAwesomeIcon icon={faTh} size={14} color="white" />
+              <Text style={styles.groupBtnText}>Màu nền</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.groupBtnItem}>
+              <FontAwesomeIcon icon={faCamera} size={14} color="white" />
+              <Text style={styles.groupBtnText}>Camera</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={styles.userRow}>
+            <Image
+              source={{
+                uri: post?.avatar || post?.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg'
               }}
               style={[styles.userAvatar, { borderRadius: 25 }]}
             />
@@ -344,111 +390,50 @@ export default function PostScreen({ route }) {
                 {formatPostTime(post?.createdAt)}
               </Text>
             </View>
-          </>
-        )}
-      </View>
-
-      {/* Nội dung bài viết */}
-      {postId !== 'testPostId' && post && (
-        <View style={[styles.postContent, isDark && { backgroundColor: '#1f1f1f' }]}>
-          {post.content && (
-            <Text style={[styles.postText, isDark && { color: '#fff' }]}>
-              {post.content}
-            </Text>
-          )}
-          {post.image && (
-            <Image 
-              source={{ uri: post.image }}
-              style={{ width: '100%', height: 300, borderRadius: 12, marginTop: 12 }}
-              resizeMode="cover"
-            />
-          )}
-          
-          {/* Nút Like, Comment, Share */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity 
-              style={[styles.actionBtn, liked && { backgroundColor: 'rgba(225, 29, 72, 0.1)' }]}
-              onPress={handleToggleLike}
-            >
-              <FontAwesomeIcon 
-                icon={faThumbsUp} 
-                size={18} 
-                color={liked ? '#e11d48' : (isDark ? '#fff' : '#000')} 
-              />
-              <Text style={[
-                styles.actionText, 
-                liked && { color: '#e11d48' },
-                isDark && !liked && { color: '#fff' }
-              ]}>
-                {likes.length} {liked ? 'Đã thích' : 'Thích'}
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionBtn}>
-              <FontAwesomeIcon icon={faCommentDots} size={18} color={isDark ? '#fff' : '#000'} />
-              <Text style={[styles.actionText, isDark && { color: '#fff' }]}>
-                {comments.length} Bình luận
-              </Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      )}
-
-      {/* Form tạo bài viết mới */}
-      {postId === 'testPostId' && (
-        <View style={styles.userInfo}>
-          <TextInput
-            style={styles.postInput}
-            placeholder="Bạn đang nghĩ gì ..." // Gợi ý nhập caption bài viết
-            value={caption} // Giá trị caption hiện tại
-            onChangeText={setCaption} // Cập nhật caption khi người dùng nhập
-            multiline // Cho phép nhập nhiều dòng
-          />
-          {/* Hiển thị ảnh đã chọn nếu có */}
-          {image && (
-            <Image 
-              source={{ uri: image }} // Nguồn ảnh từ uri đã chọn
-              style={{ width: '100%', height: 200, borderRadius: 12, marginTop: 12 }} // Style ảnh xem trước
-            />
+          {/* Nội dung bài viết */}
+          {post && (
+            <View style={[styles.postContent, isDark && { backgroundColor: '#1f1f1f' }]}> 
+              {post.content && (
+                <Text style={[styles.postText, isDark && { color: '#fff' }]}>
+                  {post.content}
+                </Text>
+              )}
+              {post.image && (
+                <Image
+                  source={{ uri: post.image }}
+                  style={{ width: '100%', height: 300, borderRadius: 12, marginTop: 12 }}
+                  resizeMode="cover"
+                />
+              )}
+              {/* Nút Like, Comment, Share */}
+              <View style={styles.actionRow}>
+                <TouchableOpacity
+                  style={[styles.actionBtn, liked && { backgroundColor: 'rgba(225, 29, 72, 0.1)' }]}
+                  onPress={handleToggleLike}
+                >
+                  <FontAwesomeIcon
+                    icon={faThumbsUp}
+                    size={18}
+                    color={liked ? '#e11d48' : (isDark ? '#fff' : '#000')}
+                  />
+                  <Text style={[
+                    styles.actionText, 
+                    liked && { color: '#e11d48' },
+                    isDark && !liked && { color: '#fff' }
+                  ]}>
+                    {likes.length} {liked ? 'Đã thích' : 'Thích'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionBtn}>
+                  <FontAwesomeIcon icon={faCommentDots} size={18} color={isDark ? '#fff' : '#000'} />
+                  <Text style={[styles.actionText, isDark && { color: '#fff' }]}>
+                    {comments.length} Bình luận
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
-        </View>
-      )}
-      </View>
-
-      {/* Buttons group - chỉ hiển thị khi tạo bài viết mới */}
-      {postId === 'testPostId' && (
-        <>
-          <View style={styles.divider} />
-          <View style={styles.groupBtn}>
-        <TouchableOpacity style={styles.groupBtnItem} onPress={pickImage}>
-          <FontAwesomeIcon icon={faCamera} size={14} color="white" />
-          <Text style={styles.groupBtnText}>Ảnh/Video</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.groupBtnItem}>
-          <FontAwesomeIcon icon={faUserPlus} size={14} color="white" />
-          <Text style={styles.groupBtnText}>Gắn thẻ người khác</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.groupBtnItem}>
-          <FontAwesomeIcon icon={faSmile} size={14} color="white" />
-          <Text style={styles.groupBtnText}>Cảm xúc/hoạt động</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.groupBtnItem}>
-          <FontAwesomeIcon icon={faMapMarkerAlt} size={14} color="white" />
-          <Text style={styles.groupBtnText}>Checkin</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.groupBtnItem}>
-          <FontAwesomeIcon icon={faVideo} size={14} color="white" />
-          <Text style={styles.groupBtnText}>Video trực tiếp</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.groupBtnItem}>
-          <FontAwesomeIcon icon={faTh} size={14} color="white" />
-          <Text style={styles.groupBtnText}>Màu nền</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.groupBtnItem}>
-          <FontAwesomeIcon icon={faCamera} size={14} color="white" />
-          <Text style={styles.groupBtnText}>Camera</Text>
-        </TouchableOpacity>
-          </View>
         </>
       )}
 
