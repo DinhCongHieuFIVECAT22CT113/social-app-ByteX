@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, TextInput, Alert, Vibration } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft, faThumbsUp, faComment, faShare } from '@fortawesome/free-solid-svg-icons';
 import styles from '../styles/CommentsScreenStyles';
@@ -13,8 +13,8 @@ import { auth } from '../config/firebaseConfig';
 
 export default function CommentsScreen({ route }) {
   const navigation = useNavigation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
   const postId = route?.params?.postId;
   const [post, setPost] = useState(null); // Thông tin bài viết
   const [comments, setComments] = useState([]); // Danh sách bình luận của bài viết

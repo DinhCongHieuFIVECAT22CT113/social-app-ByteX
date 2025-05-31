@@ -1,12 +1,13 @@
 import React from 'react';
-import { Text, View, TouchableOpacity, Image, useColorScheme } from 'react-native';
+import { Text, View, TouchableOpacity, Image } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import styles from '../styles/LandingScreenStyles';
 
 // Màn hình chào mừng/giới thiệu ứng dụng ByteX
 
 const LandingScreen = ({ navigation }) => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
 
   const handleStart = () => {
     navigation.replace('Login');

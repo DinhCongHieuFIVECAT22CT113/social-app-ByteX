@@ -34,6 +34,11 @@ export default function SettingsScreen() {
     navigation.goBack();
   };
   
+  const handleToggleDarkMode = () => {
+    console.log('Dark mode toggle button pressed');
+    toggleDarkMode();
+  };
+  
   return (
     <View style={[styles.container, isDarkMode && styles.containerDark]}>
       {/* Header */}
@@ -97,7 +102,7 @@ export default function SettingsScreen() {
               trackColor={{ false: "#767577", true: "#4ade80" }}
               thumbColor={isDarkMode ? "#fff" : "#f4f3f4"}
               ios_backgroundColor="#3e3e3e"
-              onValueChange={toggleDarkMode}
+              onValueChange={handleToggleDarkMode}
               value={isDarkMode}
             />
           </View>

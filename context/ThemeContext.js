@@ -48,12 +48,14 @@ export function ThemeProvider({ children }) {
   const toggleDarkMode = useCallback(async () => {
     try {
       const newDarkMode = !isDarkMode;
+      console.log('Toggling dark mode from', isDarkMode, 'to', newDarkMode);
       setIsDarkMode(newDarkMode);
       setIsSystemTheme(false);
       await AsyncStorage.setItem('themePreference', JSON.stringify({
         isDark: newDarkMode,
         isSystem: false
       }));
+      console.log('Dark mode toggled successfully');
     } catch (error) {
       console.error('Error saving theme preference:', error);
     }

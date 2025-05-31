@@ -8,9 +8,9 @@ import {
   ActivityIndicator, 
   Alert,
   ScrollView,
-  useColorScheme,
   StatusBar
 } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
 import styles from '../styles/UpdateUserScreenStyles';
 import ImageService from '../services/ImageService';
@@ -28,8 +28,8 @@ export default function UpdateUserScreen({ navigation, route }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
 
   useEffect(() => {
     // If user is passed via route params, use that

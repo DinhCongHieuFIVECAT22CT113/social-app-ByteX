@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Image, Vibration, FlatList, ActivityIndicator } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import {
   faArrowLeft,
@@ -32,8 +32,8 @@ import { vi } from 'date-fns/locale';
 
 export default function PostScreen({ route }) {
   const navigation = useNavigation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
   
   // Lấy postId từ route.params
   const postId = route?.params?.postId || 'testPostId';

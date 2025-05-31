@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useColorScheme } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import LandingScreen from '../screens/LandingScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -46,8 +46,9 @@ const CustomDarkTheme = {
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  // Sử dụng theme mặc định
-  const theme = DefaultTheme;
+  // Sử dụng theme từ context
+  const { isDarkMode } = useTheme();
+  const theme = isDarkMode ? CustomDarkTheme : CustomLightTheme;
   
   return (
     <NavigationContainer theme={theme}>

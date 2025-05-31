@@ -4,7 +4,7 @@
 
 // Import các thư viện và hàm cần thiết cho xác thực, lưu trữ, hình ảnh, v.v.
 import React, { useEffect, useState } from 'react';
-import { FlatList, ActivityIndicator, Vibration, useColorScheme, View, Text } from 'react-native';
+import { FlatList, ActivityIndicator, Vibration, View, Text } from 'react-native';
 import { getPostsPaginated } from '../services/PostService';
 import { auth } from '../config/firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
@@ -145,8 +145,7 @@ export default function FeedScreen() {
   const [loading, setLoading] = useState(false); 
   // State refreshing khi kéo để làm mới
   const [refreshing, setRefreshing] = useState(false); 
-  // Lấy theme hiện tại (dark/light)
-  const colorScheme = useColorScheme(); 
+  // Theme sẽ được xử lý ở component level 
 
   // Hàm lấy danh sách bài viết (có phân trang)
   const fetchPosts = async (reset = false) => {

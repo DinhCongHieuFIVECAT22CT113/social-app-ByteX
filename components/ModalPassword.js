@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, Text, useColorScheme } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import styles from '../styles/ModalPasswordStyles';
 
 // Modal xác nhận mật khẩu mới
 
 const ConfirmPasswordScreen = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>

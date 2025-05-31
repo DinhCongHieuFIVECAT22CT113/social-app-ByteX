@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, Image, TouchableOpacity,
   ActivityIndicator, FlatList, Vibration,
-  StatusBar, Alert, useColorScheme
+  StatusBar, Alert
 } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import CustomRefreshControl from '../components/CustomRefreshControl';
 import * as PostService from '../services/PostService';
 import { getLikes, getComments } from '../services/CommentService';
@@ -24,7 +25,8 @@ export default function HomeScreen() {
   const [currentUser, setCurrentUser] = useState(null);
   const [realtimeEnabled, setRealtimeEnabled] = useState(true);
   const [likedPosts, setLikedPosts] = useState({}); // Thêm state lưu trạng thái đã like cho từng post
-  const isDark = false; // Sử dụng theme sáng mặc định
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
   const navigation = useNavigation();
 
   // Lấy số like/comment thực tế cho từng post

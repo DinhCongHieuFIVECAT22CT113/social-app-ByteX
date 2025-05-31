@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, ScrollView, useColorScheme } from 'react-native';
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import { register } from '../services/AuthService';
 import { useNavigation } from '@react-navigation/native';
 import styles from '../styles/RegisterScreenStyles';
@@ -14,8 +15,8 @@ export default function ByteXRegister() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const navigation = useNavigation();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
 
   const handleRegister = async () => {
     setError('');

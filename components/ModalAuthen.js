@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, TextInput, Text, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, TextInput, Text, TouchableOpacity } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 import styles from '../styles/ModalAuthenStyles';
 
 const VerifyEmailScreen = () => {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDarkMode } = useTheme();
+  const isDark = isDarkMode;
 
   return (
     <View style={[styles.container, isDark && styles.containerDark]}>
