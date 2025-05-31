@@ -11,6 +11,8 @@ import CommentsScreen from '../screens/CommentsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import UpdateUserScreen from '../screens/UpdateUserScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import PersonalInfoScreen from '../screens/PersonalInfoScreen';
+import AboutScreen from '../screens/AboutScreen';
 
 // navigation.js
 // Cấu hình navigation cho các màn hình chính của app bằng React Navigation
@@ -62,6 +64,8 @@ export default function AppNavigator() {
         <Stack.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
         <Stack.Screen name="UpdateUser" component={UpdateUserScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="About" component={AboutScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

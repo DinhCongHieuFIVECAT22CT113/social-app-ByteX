@@ -135,13 +135,16 @@ export default function SettingsScreen() {
             Tài khoản
           </Text>
           
-          <TouchableOpacity style={styles.settingRow}>
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={() => navigation.navigate('PersonalInfo')}
+          >
             <View style={styles.settingInfo}>
-              <FontAwesomeIcon 
-                icon={faUser} 
-                size={20} 
-                color={isDarkMode ? '#4ade80' : '#22c55e'} 
-                style={styles.settingIcon} 
+              <FontAwesomeIcon
+                icon={faUser}
+                size={20}
+                color={isDarkMode ? '#4ade80' : '#22c55e'}
+                style={styles.settingIcon}
               />
               <Text style={[styles.settingText, isDarkMode && styles.textDark]}>
                 Thông tin cá nhân
@@ -170,13 +173,16 @@ export default function SettingsScreen() {
             Thông tin
           </Text>
           
-          <TouchableOpacity style={styles.settingRow}>
+          <TouchableOpacity
+            style={styles.settingRow}
+            onPress={() => navigation.navigate('About')}
+          >
             <View style={styles.settingInfo}>
-              <FontAwesomeIcon 
-                icon={faInfoCircle} 
-                size={20} 
-                color={isDarkMode ? '#4ade80' : '#22c55e'} 
-                style={styles.settingIcon} 
+              <FontAwesomeIcon
+                icon={faInfoCircle}
+                size={20}
+                color={isDarkMode ? '#4ade80' : '#22c55e'}
+                style={styles.settingIcon}
               />
               <Text style={[styles.settingText, isDarkMode && styles.textDark]}>
                 Về ByteX

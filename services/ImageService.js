@@ -29,12 +29,22 @@ export default class ImageService {
       console.error("Error uploading image to Supabase:", error);
       
       // Xử lý các loại lỗi Supabase
-      if (error.statusCode === 403) {
+      if (error.statusCode === 403 || error.message?.includes('row-level security policy')) {
+        console.error('RLS Policy Error - Avatar upload failed');
+        console.log('Please run the SQL commands in supabase_setup.sql to fix RLS policies');
+
+        // Trong development mode, trả về placeholder thay vì crash app
+        if (typeof __DEV__ !== 'undefined' && __DEV__) {
+          console.log('Using placeholder avatar due to RLS error');
+          return 'https://placehold.co/400x400?text=RLS+Error+Fix+Needed';
+        }
+
         Alert.alert(
-          'Lỗi quyền truy cập',
-          'Không có quyền upload ảnh. Vui lòng kiểm tra quy tắc bảo mật Supabase Storage.'
+          'Lỗi cấu hình Supabase',
+          'Cần cấu hình RLS policies cho Supabase Storage. Vui lòng liên hệ admin.',
+          [{ text: 'OK' }]
         );
-        throw new Error('Không có quyền upload ảnh. Vui lòng kiểm tra quy tắc bảo mật Supabase Storage.');
+        throw new Error('Supabase RLS policies need to be configured for avatars bucket');
       }
       
       // Ghi log lỗi nhưng không hiển thị Alert để tránh spam người dùng

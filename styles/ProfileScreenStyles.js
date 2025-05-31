@@ -337,4 +337,62 @@ export default StyleSheet.create({
   toggleBallActive: {
     transform: [{ translateX: 22 }],
   },
+  // Tabs styles
+  tabsContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  tabDark: {
+    backgroundColor: 'transparent',
+  },
+  activeTab: {
+    backgroundColor: '#22c55e',
+    shadowColor: '#22c55e',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  activeTabDark: {
+    backgroundColor: '#22c55e',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  tabTextDark: {
+    color: '#9ca3af',
+  },
+  activeTabText: {
+    color: '#fff',
+  },
+  activeTabTextDark: {
+    color: '#fff',
+  },
+  // Share indicator styles
+  shareIndicator: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(34, 197, 94, 0.9)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shareIcon: {
+    fontSize: 12,
+    color: '#fff',
+  },
 });

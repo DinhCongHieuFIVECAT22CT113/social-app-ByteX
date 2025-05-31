@@ -23,6 +23,7 @@ export async function addPost(postData) {
       createdAt: Date.now(), // Thời gian tạo bài viết (timestamp)
       likes: 0, // Khởi tạo số lượt thích là 0
       comments: 0, // Khởi tạo số comment là 0
+      shares: 0, // Khởi tạo số lượt chia sẻ là 0
     });
     // Trả về id của document vừa tạo
     return docRef.id;

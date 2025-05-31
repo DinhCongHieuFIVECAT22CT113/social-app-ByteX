@@ -14,8 +14,9 @@ import { useTheme } from '../context/ThemeContext';
 import * as ImagePicker from 'expo-image-picker';
 import styles from '../styles/UpdateUserScreenStyles';
 import ImageService from '../services/ImageService';
-import { updateUserProfile, updateUserFirestore } from '../services/UserService';
+import { updateUserProfile, updateUserFirestore, getUserFirestore } from '../services/UserService';
 import { auth } from '../config/firebaseConfig';
+import EventEmitter from '../utils/EventEmitter';
 
 // UpdateUserScreen.js
 // Màn hình cập nhật thông tin cá nhân (displayName, bio, avatar)
@@ -46,7 +47,19 @@ export default function UpdateUserScreen({ navigation, route }) {
         setAvatar(currentUser.photoURL || '');
         
         // Try to get bio from Firestore if available
-        // This is just a placeholder - you'd need to implement this
+        const loadBio = async () => {
+          try {
+            const firestoreData = await getUserFirestore(currentUser.uid);
+            if (firestoreData && firestoreData.bio) {
+              setBio(firestoreData.bio);
+              console.log('Bio loaded from Firestore:', firestoreData.bio);
+            }
+          } catch (error) {
+            console.log('Error loading bio from Firestore:', error);
+          }
+        };
+
+        loadBio();
         setLoading(false);
       } else {
         // No user logged in
@@ -67,14 +80,29 @@ export default function UpdateUserScreen({ navigation, route }) {
         Alert.alert('Cần quyền truy cập', 'Ứng dụng cần quyền truy cập thư viện ảnh để chọn avatar.');
         return;
       }
-      
+
+      // Thử nhiều cách khác nhau để tránh lỗi deprecated
+      let mediaTypes;
+      try {
+        // Thử cách mới trước
+        mediaTypes = [ImagePicker.MediaType.Images];
+      } catch (e) {
+        try {
+          // Fallback về cách cũ
+          mediaTypes = ImagePicker.MediaTypeOptions.Images;
+        } catch (e2) {
+          // Fallback cuối cùng
+          mediaTypes = 'Images';
+        }
+      }
+
       let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images, // Sửa lại đúng enum
+        mediaTypes: mediaTypes,
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.8, // Reduced quality for better performance
+        quality: 0.5, // Giảm quality để base64 nhỏ hơn
       });
-      
+
       if (!result.canceled && result.assets && result.assets.length > 0) {
         setAvatar(result.assets[0].uri);
         setError(''); // Clear any previous errors
@@ -118,20 +146,49 @@ export default function UpdateUserScreen({ navigation, route }) {
         throw new Error('Không tìm thấy thông tin người dùng');
       }
       
+      console.log('Starting user profile update...');
+
       // Nếu avatar là local file (có dạng file://), upload lên Supabase Storage
       if (avatar && avatar.startsWith('file')) {
-        photoURL = await ImageService.uploadImageAsync(avatar, `avatars/${currentUser.uid}.jpg`);
+        console.log('Uploading new avatar...');
+        photoURL = await ImageService.uploadImageAsync(avatar, `avatars/${currentUser.uid}_${Date.now()}.jpg`);
+        console.log('Avatar uploaded:', photoURL);
       }
-      
-      await updateUserProfile({ displayName, photoURL });
-      await updateUserFirestore(currentUser.uid, { bio });
+
+      // Cập nhật đồng thời Auth và Firestore
+      await Promise.all([
+        updateUserProfile({ displayName, photoURL }),
+        updateUserFirestore(currentUser.uid, {
+          bio,
+          avatar: photoURL,
+          photoURL: photoURL, // Đồng bộ cả 2 field
+          displayName: displayName,
+          updatedAt: Date.now()
+        })
+      ]);
+
+      // Reload user để đồng bộ dữ liệu
+      await currentUser.reload();
+
+      // Cập nhật state ngay lập tức để UI phản hồi
+      setAvatar(photoURL);
+
+      // Force re-render bằng cách clear và set lại avatar
+      setTimeout(() => {
+        setAvatar(photoURL);
+      }, 100);
+
+      // Broadcast avatar update để đồng bộ tất cả components
+      EventEmitter.emitAvatarUpdate(photoURL);
+
+      console.log('User profile updated successfully. New avatar URL:', photoURL);
       
       Alert.alert(
         "Thành công", 
         "Thông tin cá nhân đã được cập nhật",
         [{ text: "OK", onPress: () => {
           if (onUpdate) {
-            onUpdate({ displayName, bio, avatar: photoURL });
+            onUpdate({ displayName, bio, avatar: photoURL, photoURL });
           }
           navigation.goBack();
         }}]
@@ -154,9 +211,15 @@ export default function UpdateUserScreen({ navigation, route }) {
   }
 
   // Fallback ảnh mặc định nếu avatar lỗi
-  const handleAvatarError = () => {
-    setAvatar('https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg');
-    setError('Không thể tải ảnh avatar. Đã dùng ảnh mặc định.');
+  const handleAvatarError = (error) => {
+    console.log('Avatar error in UpdateUserScreen:', error.nativeEvent?.error);
+    console.log('Failed avatar URL:', avatar);
+
+    // Chỉ fallback nếu không phải là URL Supabase
+    if (!avatar?.includes('supabase.co')) {
+      setAvatar('https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg');
+      setError('Không thể tải ảnh avatar. Đã dùng ảnh mặc định.');
+    }
   };
 
   return (
@@ -188,10 +251,15 @@ export default function UpdateUserScreen({ navigation, route }) {
           onPress={pickImage}
         >
           {avatar ? (
-            <Image 
-              source={{ uri: avatar }} 
-              style={styles.avatarImg} 
+            <Image
+              source={{ uri: avatar }}
+              style={styles.avatarImg}
               onError={handleAvatarError}
+              key={avatar} // Force re-render khi avatar URL thay đổi
+              onLoad={() => {
+                console.log('Avatar loaded successfully in UpdateUserScreen:', avatar);
+                console.log('Avatar state updated at:', new Date().toISOString());
+              }}
             />
           ) : null}
           {!avatar && (

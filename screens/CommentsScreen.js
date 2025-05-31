@@ -7,6 +7,7 @@ import { faArrowLeft, faThumbsUp, faComment, faShare } from '@fortawesome/free-s
 import styles from '../styles/CommentsScreenStyles';
 import { getComments, addComment, listenComments } from '../services/CommentService';
 import { likePost, unlikePost, hasUserLiked, getLikes, listenLikes } from '../services/PostInteractionService';
+import { toggleShare, hasUserShared } from '../services/ShareService';
 import { getPostById } from '../services/PostService';
 import { auth } from '../config/firebaseConfig';
 // import LikeButton from '../components/LikeButton';
@@ -22,6 +23,7 @@ export default function CommentsScreen({ route }) {
   const [error, setError] = useState(''); // Thông báo lỗi (nếu có)
   const [likes, setLikes] = useState([]); // Danh sách like của bài viết
   const [liked, setLiked] = useState(false); // Trạng thái đã like hay chưa
+  const [shared, setShared] = useState(false); // Trạng thái đã share hay chưa
   const [currentUser, setCurrentUser] = useState(null); // Thông tin người dùng hiện tại
 
   // Lấy thông tin người dùng hiện tại
@@ -90,6 +92,22 @@ export default function CommentsScreen({ route }) {
     return () => unsubscribe && unsubscribe();
   }, [postId, currentUser]);
 
+  // Kiểm tra trạng thái share
+  useEffect(() => {
+    if (!postId || !currentUser) return;
+
+    const checkShared = async () => {
+      try {
+        const isShared = await hasUserShared(postId, currentUser.uid);
+        setShared(isShared);
+      } catch (error) {
+        console.error("Error checking share status:", error);
+      }
+    };
+
+    checkShared();
+  }, [postId, currentUser]);
+
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
     try {
@@ -136,6 +154,40 @@ export default function CommentsScreen({ route }) {
     }
   };
 
+  // Xử lý share/unshare
+  const handleToggleShare = async () => {
+    if (!currentUser) {
+      Alert.alert('Lỗi', 'Bạn cần đăng nhập để chia sẻ bài viết!');
+      return;
+    }
+
+    try {
+      Vibration.vibrate(50); // Rung khi nhấn share
+
+      // Cập nhật tạm thời UI
+      setShared(!shared);
+
+      // Gọi API toggle share
+      const result = await toggleShare(postId, currentUser.uid, post?.userId);
+      console.log(`Share ${result.action} successfully`);
+
+      // Hiển thị thông báo
+      Alert.alert(
+        "Thành công",
+        result.action === 'shared' ? "Đã chia sẻ bài viết về trang cá nhân" : "Đã hủy chia sẻ bài viết",
+        [{ text: "OK" }]
+      );
+
+    } catch (error) {
+      console.error("Error toggling share:", error);
+
+      // Rollback UI nếu có lỗi
+      setShared(shared);
+
+      Alert.alert("Lỗi", error.message || "Không thể thực hiện hành động này. Vui lòng thử lại.");
+    }
+  };
+
   const handleGoBack = () => {
     navigation.goBack();
   };
@@ -151,19 +203,39 @@ export default function CommentsScreen({ route }) {
           <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
             <FontAwesomeIcon icon={faArrowLeft} size={16} color={isDark ? '#fff' : '#000'} />
           </TouchableOpacity>
-          <View style={styles.avatar} />
+          <Image
+            source={{
+              uri: post?.avatar || post?.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg'
+            }}
+            style={styles.avatar}
+          />
           <View>
-            <Text style={[styles.author, isDark && styles.authorDark]}>Tên Tài Khoản</Text>
+            <Text style={[styles.author, isDark && styles.authorDark]}>
+              {post?.displayName || post?.author || 'Người dùng ByteX'}
+            </Text>
             <View style={styles.timeRow}>
-              <Text style={[styles.timeText, isDark && styles.timeTextDark]}>Thời gian đăng</Text>
+              <Text style={[styles.timeText, isDark && styles.timeTextDark]}>
+                {post?.createdAt ? new Date(post.createdAt).toLocaleString('vi-VN') : 'Đang tải...'}
+              </Text>
             </View>
           </View>
         </View>
         {/* Image */}
-        <Image
-          source={{ uri: 'https://storage.googleapis.com/a1aa/image/67c7c8ae-8b93-420a-1a52-62d4ef5fc981.jpg' }}
-          style={styles.mainImg}
-        />
+        {post?.image && (
+          <Image
+            source={{ uri: post.image }}
+            style={styles.mainImg}
+          />
+        )}
+
+        {/* Post Content */}
+        {post?.content && (
+          <View style={{ padding: 16 }}>
+            <Text style={[{ fontSize: 16 }, isDark && { color: '#fff' }]}>
+              {post.content}
+            </Text>
+          </View>
+        )}
         {/* Likes, comments, shares */}
         <View style={styles.statsRow}>
           <View style={styles.stat}>
@@ -200,13 +272,18 @@ export default function CommentsScreen({ route }) {
             />
             <Text style={styles.btnLabel}>Bình luận</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.btn}>
-            <FontAwesomeIcon 
-              icon={faShare} 
-              size={16} 
-              color={isDark ? '#fff' : '#000'} 
+          <TouchableOpacity
+            style={[styles.btn, shared && styles.btnActive]}
+            onPress={handleToggleShare}
+          >
+            <FontAwesomeIcon
+              icon={faShare}
+              size={16}
+              color={shared ? '#22c55e' : isDark ? '#fff' : '#000'}
             />
-            <Text style={styles.btnLabel}>Chia sẻ</Text>
+            <Text style={[styles.btnLabel, shared && { color: '#22c55e' }]}>
+              {shared ? 'Đã chia sẻ' : 'Chia sẻ'}
+            </Text>
           </TouchableOpacity>
         </View>
         <View style={[styles.divider, isDark && styles.dividerDark]} />

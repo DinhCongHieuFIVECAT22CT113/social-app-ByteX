@@ -15,10 +15,10 @@
         allow read: if request.auth != null;
         // Cho phép tạo bài viết nếu đã đăng nhập
         allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
-        // Cho phép cập nhật bài viết nếu là chủ sở hữu hoặc cập nhật like/comment count
-        allow update: if request.auth != null && 
-          (request.auth.uid == resource.data.userId || 
-          (request.writeFields.hasOnly(['likes', 'comments']) && request.auth != null));
+        // Cho phép cập nhật bài viết nếu là chủ sở hữu hoặc cập nhật like/comment/share count
+        allow update: if request.auth != null &&
+          (request.auth.uid == resource.data.userId ||
+          (request.writeFields.hasOnly(['likes', 'comments', 'shares']) && request.auth != null));
         // Cho phép xóa nếu là chủ sở hữu
         allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
         
@@ -44,7 +44,17 @@
           allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
         }
       }
-      
+
+      // Quy tắc cho collection shares
+      match /shares/{shareId} {
+        // Cho phép đọc nếu đã đăng nhập
+        allow read: if request.auth != null;
+        // Cho phép tạo share nếu đã đăng nhập và userId trong data trùng với auth.uid
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+        // Cho phép xóa share nếu đã đăng nhập và là chủ sở hữu share
+        allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      }
+
       // Quy tắc mặc định: từ chối tất cả các truy cập khác
       match /{document=**} {
         allow read, write: if false;

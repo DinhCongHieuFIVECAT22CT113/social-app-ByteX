@@ -81,24 +81,25 @@ const DEFAULT_BUCKETS = ['avatars', 'images', 'public', 'media'];
 // Hàm tiện ích để tải lên file vào Supabase Storage
 export const uploadToSupabase = async (file, bucket = 'public', path) => {
   try {
-    // Trong môi trường development, trả về URL placeholder để tránh lỗi RLS
-    if (typeof __DEV__ !== 'undefined' && __DEV__) {
-      console.log('Development mode: returning placeholder image to avoid RLS issues');
-      return 'https://placehold.co/400x400?text=Dev+Mode+Avatar';
-    }
+    // Bỏ qua placeholder trong development mode để test thật
+    // if (typeof __DEV__ !== 'undefined' && __DEV__) {
+    //   console.log('Development mode: returning placeholder image to avoid RLS issues');
+    //   return 'https://placehold.co/400x400?text=Dev+Mode+Avatar';
+    // }
     
-    // Sử dụng bucket được cung cấp hoặc mặc định là 'public'
-    let bucketName = bucket || 'public';
-    console.log(`Attempting to upload to Supabase bucket: ${bucketName}, path: ${path}`);
+    // Thử nhiều bucket khác nhau nếu avatars bị lỗi RLS
+    const bucketsToTry = [bucket || 'avatars', 'public', 'images'];
+    console.log(`Will try uploading to buckets: ${bucketsToTry.join(', ')}, path: ${path}`);
     
     // Kiểm tra xem Supabase đã được khởi tạo đúng chưa
     if (!supabase || !supabase.storage) {
       throw new Error('Supabase client not properly initialized');
     }
     
-    // Tạo tên file duy nhất nếu không có path
-    const filePath = path || `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-    
+    // Tạo tên file duy nhất nếu không có path, thêm timestamp để tránh cache
+    const timestamp = Date.now();
+    const filePath = path || `${timestamp}_${Math.random().toString(36).substring(2, 15)}.jpg`;
+
     // Kiểm tra xem file có phải là URI local không (bắt đầu bằng file:// hoặc content://)
     const isLocalUri = file.startsWith('file://') || file.startsWith('content://');
     
@@ -118,13 +119,15 @@ export const uploadToSupabase = async (file, bucket = 'public', path) => {
           throw new Error('Failed to read file content');
         }
         
-        // Xác định loại file dựa trên phần mở rộng
-        if (file.endsWith('.png')) {
+        // Xác định loại file dựa trên phần mở rộng hoặc MIME type
+        if (file.toLowerCase().includes('.png') || file.toLowerCase().includes('png')) {
           contentType = 'image/png';
-        } else if (file.endsWith('.gif')) {
+        } else if (file.toLowerCase().includes('.gif') || file.toLowerCase().includes('gif')) {
           contentType = 'image/gif';
-        } else if (file.endsWith('.webp')) {
+        } else if (file.toLowerCase().includes('.webp') || file.toLowerCase().includes('webp')) {
           contentType = 'image/webp';
+        } else if (file.toLowerCase().includes('.jpg') || file.toLowerCase().includes('.jpeg') || file.toLowerCase().includes('jpeg')) {
+          contentType = 'image/jpeg';
         }
         
         console.log('Successfully read file content');
@@ -167,11 +170,22 @@ export const uploadToSupabase = async (file, bucket = 'public', path) => {
     // Thử tải lên với bucket được chỉ định
     let uploadResult;
     let uploadError;
-    
+    let bucketName = bucketsToTry[0]; // Sử dụng bucket đầu tiên trong danh sách
+
     try {
+      console.log('Uploading file with details:');
+      console.log('- Bucket:', bucketName);
+      console.log('- File path:', filePath);
+      console.log('- Content type:', contentType);
+      console.log('- File content length:', fileContent?.length || 'undefined');
+
+      // Chuyển base64 thành binary để upload
+      const binaryData = Uint8Array.from(atob(fileContent), c => c.charCodeAt(0));
+      console.log('Binary data length:', binaryData.length);
+
       uploadResult = await supabase.storage
         .from(bucketName)
-        .upload(filePath, fileContent, {
+        .upload(filePath, binaryData, {
           contentType: contentType,
           cacheControl: '3600',
           upsert: true
@@ -182,44 +196,53 @@ export const uploadToSupabase = async (file, bucket = 'public', path) => {
         console.log(`Error uploading to bucket "${bucketName}": ${uploadError.message}`);
       } else {
         console.log(`Successfully uploaded to bucket "${bucketName}"`);
+        console.log('Upload result:', uploadResult.data);
+
+        // Verify file was actually uploaded
+        if (uploadResult.data && uploadResult.data.path) {
+          console.log('File uploaded to path:', uploadResult.data.path);
+        }
       }
     } catch (error) {
       uploadError = error;
       console.log(`Exception when uploading to bucket "${bucketName}": ${error.message}`);
     }
     
-    // Nếu bucket không tồn tại, thử các bucket mặc định khác
-    if (uploadError && uploadError.message && uploadError.message.includes('Bucket not found')) {
-      console.log('Bucket not found, trying default buckets...');
-      
+    // Nếu bucket đầu tiên thất bại, thử các bucket khác
+    if (uploadError) {
+      console.log('First bucket failed, trying remaining buckets...');
+
       let successBucket = null;
-      
-      // Thử từng bucket mặc định
-      for (const defaultBucket of DEFAULT_BUCKETS) {
-        // Bỏ qua bucket đã thử
-        if (defaultBucket === bucketName) continue;
+
+      // Thử từng bucket còn lại trong danh sách
+      for (let i = 1; i < bucketsToTry.length; i++) {
+        const bucketToTry = bucketsToTry[i];
         
         try {
-          console.log(`Trying default bucket: ${defaultBucket}`);
+          console.log(`Trying bucket: ${bucketToTry}`);
+
+          // Chuyển base64 thành binary để upload
+          const binaryData = Uint8Array.from(atob(fileContent), c => c.charCodeAt(0));
+
           uploadResult = await supabase.storage
-            .from(defaultBucket)
-            .upload(filePath, fileContent, {
+            .from(bucketToTry)
+            .upload(filePath, binaryData, {
               contentType: contentType,
               cacheControl: '3600',
               upsert: true
             });
-          
+
           if (!uploadResult.error) {
-            console.log(`Successfully uploaded to default bucket "${defaultBucket}"`);
+            console.log(`Successfully uploaded to bucket "${bucketToTry}"`);
             // Lưu bucket thành công để sử dụng sau
-            successBucket = defaultBucket;
+            successBucket = bucketToTry;
             uploadError = null;
             break;
           } else {
-            console.log(`Error with default bucket "${defaultBucket}": ${uploadResult.error.message}`);
+            console.log(`Error with bucket "${bucketToTry}": ${uploadResult.error.message}`);
           }
         } catch (error) {
-          console.log(`Exception with default bucket "${defaultBucket}": ${error.message}`);
+          console.log(`Exception with bucket "${bucketToTry}": ${error.message}`);
         }
       }
       
@@ -235,12 +258,16 @@ export const uploadToSupabase = async (file, bucket = 'public', path) => {
       console.error('All bucket upload attempts failed:', uploadError);
       throw uploadError;
     }
-    
+
     console.log('File uploaded successfully to Supabase');
-    
+
+    // Đảm bảo bucketName được set đúng
+    const finalBucketName = bucketName || bucketsToTry[0];
+    console.log('Using final bucket name:', finalBucketName);
+
     // Tạo URL công khai cho file
     const { data: publicUrlData } = supabase.storage
-      .from(bucketName)
+      .from(finalBucketName)
       .getPublicUrl(filePath);
     
     if (!publicUrlData || !publicUrlData.publicUrl) {
@@ -248,16 +275,33 @@ export const uploadToSupabase = async (file, bucket = 'public', path) => {
     }
     
     console.log('Public URL generated:', publicUrlData.publicUrl);
-    return publicUrlData.publicUrl;
+
+    // Thêm timestamp vào URL để tránh cache
+    const urlWithTimestamp = `${publicUrlData.publicUrl}?t=${timestamp}`;
+    console.log('URL with cache busting:', urlWithTimestamp);
+
+    return urlWithTimestamp;
   } catch (error) {
     console.error('Error uploading to Supabase:', error);
-    
-    // Trong môi trường development, trả về URL placeholder
+
+    // Xử lý lỗi RLS cụ thể
+    if (error.statusCode === 403 || error.message?.includes('row-level security policy')) {
+      console.error('RLS Policy Error: Please check Supabase Storage policies for avatars bucket');
+      console.log('Run the SQL commands in supabase_setup.sql to fix this issue');
+
+      // Trong development, trả về placeholder để app không crash
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.log('Returning placeholder image due to RLS error in development mode');
+        return 'https://placehold.co/400x400?text=RLS+Policy+Error';
+      }
+    }
+
+    // Trong môi trường development, trả về URL placeholder cho các lỗi khác
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
       console.log('Returning placeholder image due to error in development mode');
       return 'https://placehold.co/400x400?text=Image+Upload+Failed';
     }
-    
+
     // Trong môi trường production, ném lỗi để xử lý ở lớp trên
     throw error;
   }

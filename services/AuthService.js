@@ -13,6 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import ImageService from '../services/ImageService';
 import { updateUserProfile, updateUserFirestore } from '../services/UserService';
 import { likePost } from '../services/PostInteractionService';
+import EventEmitter from '../utils/EventEmitter';
 
 // =======================
 // Đăng ký tài khoản mới
@@ -92,12 +93,13 @@ export const handleLogout = async (navigation) => {
 // 1. Chọn ảnh từ thư viện
 // 2. Upload ảnh lên Storage
 // 3. Cập nhật avatar trên Auth và Firestore
+// 4. Reload user để đồng bộ dữ liệu
 // =======================
 export async function handleChangeAvatar() {
   try {
     // 1. Chọn ảnh từ thư viện (cho phép chỉnh sửa, tỉ lệ 1:1, chất lượng 0.8)
-    const result = await ImagePicker.launchImageLibraryAsync({ 
-      mediaTypes: [ImagePicker.MediaType.Images],
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images, // Sử dụng MediaTypeOptions
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -105,14 +107,34 @@ export async function handleChangeAvatar() {
     // Nếu người dùng hủy bỏ hoặc không chọn ảnh, thoát hàm
     if (result.canceled || !result.assets || result.assets.length === 0) return;
     const uri = result.assets[0].uri; // Lấy đường dẫn ảnh
+
     // Lấy user hiện tại từ Firebase Auth
     const user = auth.currentUser;
     if (!user) throw new Error('No user logged in');
-    // 2. Upload ảnh lên Supabase Storage
-    const photoURL = await ImageService.uploadImageAsync(uri, `avatars/${user.uid}.jpg`);
-    // 3. Cập nhật avatar trên Auth và Firestore
-    await updateUserProfile({ displayName: user.displayName, photoURL });
-    await updateUserFirestore(user.uid, { avatar: photoURL });
+
+    console.log('Starting avatar upload for user:', user.uid);
+
+    // 2. Upload ảnh lên Supabase Storage với timestamp để tránh cache
+    const photoURL = await ImageService.uploadImageAsync(uri, `avatars/${user.uid}_${Date.now()}.jpg`);
+    console.log('Avatar uploaded successfully:', photoURL);
+
+    // 3. Cập nhật avatar trên Auth và Firestore đồng thời
+    await Promise.all([
+      updateUserProfile({ displayName: user.displayName, photoURL }),
+      updateUserFirestore(user.uid, {
+        avatar: photoURL,
+        photoURL: photoURL, // Đồng bộ cả 2 field
+        updatedAt: Date.now()
+      })
+    ]);
+
+    // 4. Reload user để đồng bộ dữ liệu mới nhất
+    await user.reload();
+
+    // 5. Broadcast avatar update để đồng bộ tất cả components
+    EventEmitter.emitAvatarUpdate(photoURL);
+
+    console.log('Avatar update completed successfully');
     return photoURL;
   } catch (error) {
     // Log lỗi nếu có vấn đề khi đổi avatar

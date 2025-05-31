@@ -23,22 +23,45 @@ export async function updateUserProfile({ displayName, photoURL }) {
 // =======================
 export async function updateUserFirestore(uid, updateData) {
   const userRef = doc(db, 'users', uid); // Tham chiếu đến document user theo uid
-  
+
+  console.log('Updating user Firestore with data:', updateData);
+
   // Kiểm tra xem document đã tồn tại chưa
   const docSnap = await getDoc(userRef);
-  
+
   if (docSnap.exists()) {
     // Nếu document đã tồn tại, cập nhật nó
-    await updateDoc(userRef, { 
+    await updateDoc(userRef, {
       ...updateData,
       updatedAt: Date.now()
     });
+    console.log('User Firestore updated successfully');
   } else {
     // Nếu document chưa tồn tại, tạo mới
-    await setDoc(userRef, { 
+    await setDoc(userRef, {
       ...updateData,
       createdAt: Date.now(),
       updatedAt: Date.now()
     });
+    console.log('User Firestore document created successfully');
+  }
+}
+
+// Thêm hàm lấy thông tin user từ Firestore
+export async function getUserFirestore(uid) {
+  try {
+    const userRef = doc(db, 'users', uid);
+    const docSnap = await getDoc(userRef);
+
+    if (docSnap.exists()) {
+      console.log('User Firestore data retrieved:', docSnap.data());
+      return docSnap.data();
+    } else {
+      console.log('No user document found in Firestore');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error getting user from Firestore:', error);
+    throw error;
   }
 }

@@ -24,9 +24,11 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { auth } from '../config/firebaseConfig';
 import { logout } from '../services/AuthService';
-import { getPosts } from '../services/PostService';
+import { getPosts, getPostById } from '../services/PostService';
+import { getUserSharedPosts } from '../services/ShareService';
 import styles from '../styles/ProfileScreenStyles';
 import { useTheme } from '../context/ThemeContext';
+import EventEmitter from '../utils/EventEmitter';
 
 // ProfileScreen.js
 // Màn hình trang cá nhân người dùng, hiển thị thông tin, ảnh, follower, following
@@ -39,12 +41,14 @@ export default function ProfileScreen() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userPosts, setUserPosts] = useState([]);
+  const [sharedPosts, setSharedPosts] = useState([]);
   const [stats, setStats] = useState({
     followers: 0,
     following: 0,
     posts: 0
   });
   const [showSideMenu, setShowSideMenu] = useState(false);
+  const [activeTab, setActiveTab] = useState('posts'); // 'posts' hoặc 'shared'
 
   useEffect(() => {
     // Lấy thông tin người dùng hiện tại
@@ -57,32 +61,66 @@ export default function ProfileScreen() {
         photoURL: user.photoURL || 'https://storage.googleapis.com/a1aa/image/e714f4c7-cbf2-454f-f364-39d492eaf9c7.jpg'
       });
       
-      // Lấy bài viết của người dùng
-      const fetchUserPosts = async () => {
+      // Lấy bài viết của người dùng và bài viết đã share
+      const fetchUserData = async () => {
         try {
+          // Lấy bài viết gốc của user
           const allPosts = await getPosts();
-          const userPosts = allPosts.filter(post => post.userId === user.uid);
-          setUserPosts(userPosts);
-          
+          const userOriginalPosts = allPosts.filter(post => post.userId === user.uid);
+          setUserPosts(userOriginalPosts);
+
+          // Lấy bài viết đã share
+          const userShares = await getUserSharedPosts(user.uid);
+          console.log('User shared posts:', userShares);
+
+          // Lấy thông tin chi tiết của các bài viết đã share
+          const sharedPostsDetails = [];
+          for (const share of userShares) {
+            const originalPost = allPosts.find(post => post.id === share.postId);
+            if (originalPost) {
+              sharedPostsDetails.push({
+                ...originalPost,
+                isShared: true,
+                sharedAt: share.createdAt,
+                shareId: share.id
+              });
+            }
+          }
+          setSharedPosts(sharedPostsDetails);
+
           // Cập nhật thống kê
           setStats({
             followers: Math.floor(Math.random() * 100), // Giả lập số liệu
             following: Math.floor(Math.random() * 50),  // Giả lập số liệu
-            posts: userPosts.length
+            posts: userOriginalPosts.length
           });
-          
+
           setLoading(false);
         } catch (error) {
-          console.error("Error fetching user posts:", error);
+          console.error("Error fetching user data:", error);
           setLoading(false);
         }
       };
       
-      fetchUserPosts();
+      fetchUserData();
     } else {
       setLoading(false);
       navigation.replace('Login');
     }
+  }, []);
+
+  // Lắng nghe avatar updates
+  useEffect(() => {
+    const handleAvatarUpdate = ({ photoURL }) => {
+      console.log('ProfileScreen: Avatar updated via EventEmitter:', photoURL);
+      setCurrentUser(prev => prev ? { ...prev, photoURL } : null);
+    };
+
+    const unsubscribeAvatar = EventEmitter.onAvatarUpdate(handleAvatarUpdate);
+
+    return () => {
+      unsubscribeAvatar();
+    };
   }, []);
 
   // Xử lý đăng xuất
@@ -126,8 +164,20 @@ export default function ProfileScreen() {
   };
   
   // Xử lý thay đổi ảnh đại diện
-  const handleChangeAvatar = () => {
-    navigation.navigate('UpdateUser');
+  const handleChangeAvatar = async () => {
+    try {
+      const { handleChangeAvatar: changeAvatar } = await import('../services/AuthService');
+      const newPhotoURL = await changeAvatar();
+      if (newPhotoURL) {
+        // Cập nhật state ngay lập tức để UI phản hồi
+        setCurrentUser(prev => ({ ...prev, photoURL: newPhotoURL }));
+        console.log('Avatar updated in ProfileScreen:', newPhotoURL);
+      }
+      return newPhotoURL;
+    } catch (error) {
+      console.error('Error updating avatar in ProfileScreen:', error);
+      throw error;
+    }
   };
   
   // Xử lý theo dõi người dùng
@@ -177,8 +227,13 @@ export default function ProfileScreen() {
               source={{ uri: currentUser?.photoURL || 'https://storage.googleapis.com/a1aa/image/e714f4c7-cbf2-454f-f364-39d492eaf9c7.jpg' }}
               style={styles.profileAvatar}
               accessibilityLabel="Ảnh đại diện người dùng"
+              key={currentUser?.photoURL} // Force re-render khi photoURL thay đổi
               onError={e => {
+                console.log('Profile avatar load error:', e.nativeEvent?.error || 'unknown image format');
                 setCurrentUser(c => ({ ...c, photoURL: 'https://storage.googleapis.com/a1aa/image/e714f4c7-cbf2-454f-f364-39d492eaf9c7.jpg' }));
+              }}
+              onLoad={() => {
+                console.log('Profile avatar loaded successfully:', currentUser?.photoURL);
               }}
             />
           </View>
@@ -236,51 +291,114 @@ export default function ProfileScreen() {
           isDark ? styles.dividerDark : styles.dividerLight
         ]} />
 
-        {/* Image Gallery */}
-        <Text style={[styles.galleryTitle, isDark && styles.galleryTitleDark]}>Ảnh của bạn</Text>
-        
-        {userPosts.length > 0 ? (
-          <FlatList
-            data={userPosts}
-            numColumns={3}
-            scrollEnabled={false}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity 
-                style={styles.galleryItem}
-                onPress={() => navigation.navigate('Post', { postId: item.id })}
-              >
-                <Image
-                  source={{ uri: item.image || 'https://storage.googleapis.com/a1aa/image/67c7c8ae-8b93-420a-1a52-62d4ef5fc981.jpg' }}
-                  style={styles.galleryImage}
-                  accessibilityLabel="Ảnh bài viết"
-                />
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <Text style={[styles.emptyText, isDark && styles.emptyTextDark]}>
-                Bạn chưa có bài viết nào
-              </Text>
-            }
-          />
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'posts' && styles.activeTab,
+              isDark && styles.tabDark,
+              activeTab === 'posts' && isDark && styles.activeTabDark
+            ]}
+            onPress={() => setActiveTab('posts')}
+          >
+            <Text style={[
+              styles.tabText,
+              activeTab === 'posts' && styles.activeTabText,
+              isDark && styles.tabTextDark,
+              activeTab === 'posts' && isDark && styles.activeTabTextDark
+            ]}>
+              Bài viết ({userPosts.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'shared' && styles.activeTab,
+              isDark && styles.tabDark,
+              activeTab === 'shared' && isDark && styles.activeTabDark
+            ]}
+            onPress={() => setActiveTab('shared')}
+          >
+            <Text style={[
+              styles.tabText,
+              activeTab === 'shared' && styles.activeTabText,
+              isDark && styles.tabTextDark,
+              activeTab === 'shared' && isDark && styles.activeTabTextDark
+            ]}>
+              Đã chia sẻ ({sharedPosts.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content based on active tab */}
+        {activeTab === 'posts' ? (
+          // Hiển thị bài viết gốc
+          userPosts.length > 0 ? (
+            <FlatList
+              data={userPosts}
+              numColumns={3}
+              scrollEnabled={false}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.galleryItem}
+                  onPress={() => navigation.navigate('Comments', { postId: item.id })}
+                >
+                  <Image
+                    source={{ uri: item.image || 'https://storage.googleapis.com/a1aa/image/67c7c8ae-8b93-420a-1a52-62d4ef5fc981.jpg' }}
+                    style={styles.galleryImage}
+                    accessibilityLabel="Ảnh bài viết"
+                  />
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text style={[styles.emptyText, isDark && styles.emptyTextDark]}>
+                  Bạn chưa có bài viết nào
+                </Text>
+              }
+            />
+          ) : (
+            <Text style={[styles.emptyText, isDark && styles.emptyTextDark]}>
+              Bạn chưa có bài viết nào
+            </Text>
+          )
         ) : (
-          <View style={styles.galleryGrid}>
-            <Image
-              source={{ uri: 'https://storage.googleapis.com/a1aa/image/3b64246d-2368-4bab-5a46-53078d1d10d7.jpg' }}
-              style={styles.galleryImage}
-              accessibilityLabel="Ảnh bài viết 1"
+          // Hiển thị bài viết đã share
+          sharedPosts.length > 0 ? (
+            <FlatList
+              data={sharedPosts}
+              numColumns={3}
+              scrollEnabled={false}
+              keyExtractor={(item) => item.shareId || item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.galleryItem}
+                  onPress={() => navigation.navigate('Comments', { postId: item.id })}
+                >
+                  <Image
+                    source={{ uri: item.image || 'https://storage.googleapis.com/a1aa/image/67c7c8ae-8b93-420a-1a52-62d4ef5fc981.jpg' }}
+                    style={styles.galleryImage}
+                    accessibilityLabel="Ảnh bài viết đã chia sẻ"
+                  />
+                  {/* Indicator cho bài viết đã share */}
+                  <View style={styles.shareIndicator}>
+                    <Text style={styles.shareIcon}>🔁</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text style={[styles.emptyText, isDark && styles.emptyTextDark]}>
+                  Bạn chưa chia sẻ bài viết nào
+                </Text>
+              }
             />
-            <Image
-              source={{ uri: 'https://storage.googleapis.com/a1aa/image/aafb1560-d2af-49ff-4e8f-4817b52d9a3c.jpg' }}
-              style={styles.galleryImage}
-              accessibilityLabel="Ảnh bài viết 2"
-            />
-            <Image
-              source={{ uri: 'https://storage.googleapis.com/a1aa/image/b702c87b-bf9e-4f9b-7d23-67d57b4a5bd9.jpg' }}
-              style={styles.galleryImage}
-              accessibilityLabel="Ảnh bài viết 3"
-            />
-          </View>
+          ) : (
+            <Text style={[styles.emptyText, isDark && styles.emptyTextDark]}>
+              Bạn chưa chia sẻ bài viết nào
+            </Text>
+          )
         )}
       </ScrollView>
       
@@ -314,11 +432,20 @@ export default function ProfileScreen() {
             <Text style={[styles.menuItemText, isDark && styles.menuItemTextDark]}>Danh sách bài đăng</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => {
+            onPress={async () => {
               toggleSideMenu();
-              handleChangeAvatar();
+              try {
+                const newPhotoURL = await handleChangeAvatar();
+                if (newPhotoURL) {
+                  // Cập nhật state ngay lập tức để UI phản hồi
+                  setCurrentUser(prev => ({ ...prev, photoURL: newPhotoURL }));
+                  console.log('Avatar updated in ProfileScreen:', newPhotoURL);
+                }
+              } catch (error) {
+                console.error('Error updating avatar in ProfileScreen:', error);
+              }
             }}
           >
             <FontAwesomeIcon icon={faUserEdit} size={20} color={isDark ? '#4ade80' : '#22c55e'} />

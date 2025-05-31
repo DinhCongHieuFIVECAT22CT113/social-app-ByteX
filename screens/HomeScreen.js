@@ -9,10 +9,12 @@ import CustomRefreshControl from '../components/CustomRefreshControl';
 import * as PostService from '../services/PostService';
 import { getLikes, getComments } from '../services/CommentService';
 import { likePost, unlikePost, hasUserLiked, toggleLike } from '../services/PostInteractionService';
+import { toggleShare, hasUserShared } from '../services/ShareService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { auth } from '../config/firebaseConfig';
 import styles from '../styles/HomeScreenStyles';
 import LikeButton from '../components/LikeButton';
+import EventEmitter from '../utils/EventEmitter';
 
 const PAGE_SIZE = 10;
 
@@ -25,6 +27,7 @@ export default function HomeScreen() {
   const [currentUser, setCurrentUser] = useState(null);
   const [realtimeEnabled, setRealtimeEnabled] = useState(true);
   const [likedPosts, setLikedPosts] = useState({}); // Thêm state lưu trạng thái đã like cho từng post
+  const [sharedPosts, setSharedPosts] = useState({}); // Thêm state lưu trạng thái đã share cho từng post
   const { isDarkMode } = useTheme();
   const isDark = isDarkMode;
   const navigation = useNavigation();
@@ -80,8 +83,7 @@ export default function HomeScreen() {
 
   // Lấy thông tin người dùng hiện tại
   useEffect(() => {
-    const updateCurrentUser = () => {
-      const user = auth.currentUser;
+    const updateCurrentUser = (user) => {
       if (user) {
         setCurrentUser({
           uid: user.uid,
@@ -89,6 +91,7 @@ export default function HomeScreen() {
           email: user.email || '',
           photoURL: user.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg'
         });
+        console.log('User data updated in HomeScreen:', user.photoURL);
       } else {
         setCurrentUser(null);
       }
@@ -96,8 +99,19 @@ export default function HomeScreen() {
 
     // Lắng nghe sự thay đổi trạng thái đăng nhập
     const unsubscribe = auth.onAuthStateChanged(updateCurrentUser);
-    
-    return () => unsubscribe();
+
+    // Lắng nghe avatar updates từ AuthService
+    const handleAvatarUpdate = ({ photoURL }) => {
+      console.log('HomeScreen: Avatar updated via EventEmitter:', photoURL);
+      setCurrentUser(prev => prev ? { ...prev, photoURL } : null);
+    };
+
+    const unsubscribeAvatar = EventEmitter.onAvatarUpdate(handleAvatarUpdate);
+
+    return () => {
+      unsubscribe();
+      unsubscribeAvatar();
+    };
   }, []);
 
   // Lắng nghe bài viết realtime khi màn hình được focus
@@ -131,17 +145,20 @@ export default function HomeScreen() {
     }
   };
 
-  // Kiểm tra user đã like các post nào khi load danh sách
+  // Kiểm tra user đã like và share các post nào khi load danh sách
   useEffect(() => {
     if (!currentUser || !posts.length) return;
-    const fetchLiked = async () => {
-      const result = {};
+    const fetchLikedAndShared = async () => {
+      const likedResult = {};
+      const sharedResult = {};
       for (const post of posts) {
-        result[post.id] = await hasUserLiked(post.id, currentUser.uid);
+        likedResult[post.id] = await hasUserLiked(post.id, currentUser.uid);
+        sharedResult[post.id] = await hasUserShared(post.id, currentUser.uid);
       }
-      setLikedPosts(result);
+      setLikedPosts(likedResult);
+      setSharedPosts(sharedResult);
     };
-    fetchLiked();
+    fetchLikedAndShared();
   }, [posts, currentUser]);
 
   // Hàm toggle like/unlike
@@ -192,6 +209,63 @@ export default function HomeScreen() {
       
       Alert.alert("Lỗi", "Không thể thực hiện hành động này. Vui lòng thử lại.");
       Alert.alert('Lỗi', 'Không thể cập nhật like.');
+    }
+  };
+
+  // Hàm toggle share/unshare
+  const handleToggleShare = async (postId, originalAuthorId) => {
+    if (!auth.currentUser) {
+      Alert.alert(
+        "Yêu cầu đăng nhập",
+        "Bạn cần đăng nhập để chia sẻ bài viết",
+        [
+          { text: "Hủy", style: "cancel" },
+          { text: "Đăng nhập", onPress: () => navigation.navigate('Login') }
+        ]
+      );
+      return;
+    }
+
+    try {
+      Vibration.vibrate(50); // Rung nhẹ khi nhấn share
+
+      // Cập nhật tạm thời UI trước khi server phản hồi
+      const alreadyShared = sharedPosts[postId];
+      setSharedPosts(shared => ({ ...shared, [postId]: !alreadyShared }));
+
+      // Cập nhật tạm thời số lượng share
+      setPosts(posts => posts.map(post =>
+        post.id === postId ? {
+          ...post,
+          shares: alreadyShared ? (post.shares || 1) - 1 : (post.shares || 0) + 1
+        } : post
+      ));
+
+      // Gọi API toggle share
+      const result = await toggleShare(postId, auth.currentUser.uid, originalAuthorId);
+      console.log(`Share ${result.action} successfully`);
+
+      // Hiển thị thông báo
+      Alert.alert(
+        "Thành công",
+        result.action === 'shared' ? "Đã chia sẻ bài viết về trang cá nhân" : "Đã hủy chia sẻ bài viết",
+        [{ text: "OK" }]
+      );
+
+    } catch (error) {
+      console.error("Error toggling share:", error);
+
+      // Rollback UI nếu có lỗi
+      const alreadyShared = sharedPosts[postId];
+      setSharedPosts(shared => ({ ...shared, [postId]: alreadyShared }));
+      setPosts(posts => posts.map(post =>
+        post.id === postId ? {
+          ...post,
+          shares: alreadyShared ? (post.shares || 0) + 1 : (post.shares || 1) - 1
+        } : post
+      ));
+
+      Alert.alert("Lỗi", error.message || "Không thể thực hiện hành động này. Vui lòng thử lại.");
     }
   };
 
@@ -292,7 +366,12 @@ export default function HomeScreen() {
                 style={styles.avatar}
                 defaultSource={{ uri: defaultAvatar }}
                 onError={(error) => {
-                  console.log('Avatar load error for user:', postAuthor, error.nativeEvent.error);
+                  console.log('Avatar load error for user:', postAuthor, 'Error:', error.nativeEvent?.error || 'unknown image format');
+                  // Có thể set fallback avatar ở đây nếu cần
+                }}
+                onLoad={() => {
+                  // Log khi avatar load thành công
+                  console.log('Avatar loaded successfully for user:', postAuthor);
                 }}
               />
               <View style={styles.avatarStatus} />
@@ -334,9 +413,25 @@ export default function HomeScreen() {
           ) : null}
 
           <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.actionBtn}>
-              <Text style={{ fontSize: 16 }}>🔁</Text>
-              <Text style={styles.actionText}>{item.shares || 0}</Text>
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                sharedPosts[item.id] && { backgroundColor: isDark ? 'rgba(34, 197, 94, 0.1)' : 'rgba(34, 197, 94, 0.1)' }
+              ]}
+              onPress={() => handleToggleShare(item.id, item.userId)}
+            >
+              <Text style={{
+                fontSize: 16,
+                color: sharedPosts[item.id] ? '#22c55e' : (isDark ? '#fff' : '#000')
+              }}>
+                🔁
+              </Text>
+              <Text style={[
+                styles.actionText,
+                sharedPosts[item.id] && { color: '#22c55e' }
+              ]}>
+                {item.shares || 0}
+              </Text>
             </TouchableOpacity>
             <LikeButton
               postId={item.id}
@@ -346,8 +441,8 @@ export default function HomeScreen() {
               onToggleLike={() => handleToggleLike(item.id)}
               isDark={isDark}
             />
-            <TouchableOpacity 
-              style={styles.actionBtn} 
+            <TouchableOpacity
+              style={styles.actionBtn}
               onPress={() => navigation.navigate('Comments', { postId: item.id })}
             >
               <Text style={{ fontSize: 16 }}>💬</Text>
@@ -386,9 +481,11 @@ export default function HomeScreen() {
           <>
             <View style={[styles.header, isDark && styles.headerDark]}>
               <TouchableOpacity style={styles.headerLeft} onPress={handleProfilePress}>
-                <Image 
-                  source={{ uri: currentUser?.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg' }} 
-                  style={styles.headerAvatar} 
+                <Image
+                  source={{ uri: currentUser?.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg' }}
+                  style={styles.headerAvatar}
+                  key={currentUser?.photoURL} // Force re-render khi photoURL thay đổi
+                  onLoad={() => console.log('Header avatar loaded:', currentUser?.photoURL)}
                 />
                 <View>
                   <Text style={[styles.headerName, isDark && styles.headerNameDark]}>
