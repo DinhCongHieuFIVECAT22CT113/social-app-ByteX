@@ -8,7 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 import CustomRefreshControl from '../components/CustomRefreshControl';
 import * as PostService from '../services/PostService';
 import { getLikes, getComments } from '../services/CommentService';
-import { likePost, unlikePost, hasUserLiked } from '../services/PostInteractionService';
+import { likePost, unlikePost, hasUserLiked, toggleLike } from '../services/PostInteractionService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { auth } from '../config/firebaseConfig';
 import styles from '../styles/HomeScreenStyles';
@@ -161,23 +161,36 @@ export default function HomeScreen() {
     try {
       Vibration.vibrate(100); // Rung khi nhấn like
       
-      const alreadyLiked = likedPosts[postId];
-      if (alreadyLiked) {
-        await unlikePost(postId, auth.currentUser.uid);
-      } else {
-        await likePost(postId, auth.currentUser.uid);
-      }
-      
       // Cập nhật tạm thời UI trước khi server phản hồi
+      const alreadyLiked = likedPosts[postId];
       setLikedPosts(liked => ({ ...liked, [postId]: !alreadyLiked }));
       
-      // Cập nhật số lượng like
-      const likesArr = await getLikes(postId);
+      // Cập nhật tạm thời số lượng like
       setPosts(posts => posts.map(post =>
-        post.id === postId ? { ...post, likes: likesArr.length } : post
+        post.id === postId ? { 
+          ...post, 
+          likes: alreadyLiked ? (post.likes || 1) - 1 : (post.likes || 0) + 1 
+        } : post
       ));
+      
+      // Gọi API toggle like
+      const result = await toggleLike(postId, auth.currentUser.uid);
+      console.log(`Like ${result.action} successfully`);
+      
     } catch (error) {
       console.error("Error toggling like:", error);
+      
+      // Rollback UI nếu có lỗi
+      const alreadyLiked = likedPosts[postId];
+      setLikedPosts(liked => ({ ...liked, [postId]: alreadyLiked }));
+      setPosts(posts => posts.map(post =>
+        post.id === postId ? { 
+          ...post, 
+          likes: alreadyLiked ? (post.likes || 0) + 1 : (post.likes || 1) - 1 
+        } : post
+      ));
+      
+      Alert.alert("Lỗi", "Không thể thực hiện hành động này. Vui lòng thử lại.");
       Alert.alert('Lỗi', 'Không thể cập nhật like.');
     }
   };
@@ -205,15 +218,45 @@ export default function HomeScreen() {
     }
   };
 
+  // Hàm format thời gian đẹp hơn
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '';
+    
+    const now = Date.now();
+    const postTime = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - timestamp) / 1000);
+    
+    if (diffInSeconds < 60) {
+      return 'Vừa xong';
+    } else if (diffInSeconds < 3600) {
+      const minutes = Math.floor(diffInSeconds / 60);
+      return `${minutes} phút trước`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} giờ trước`;
+    } else if (diffInSeconds < 604800) {
+      const days = Math.floor(diffInSeconds / 86400);
+      return `${days} ngày trước`;
+    } else {
+      return postTime.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+  };
+
   const renderItem = ({ item }) => {
     // Xử lý trường hợp item không có dữ liệu đầy đủ
     const postAuthor = item.displayName || item.author || 'Người dùng ByteX';
-    const postAvatar = item.avatar || item.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg';
+    const postAvatar = item.avatar || item.photoURL;
     const postContent = item.content || item.caption || '';
     const postImage = item.image || '';
-    const postTime = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
-    // Sử dụng biến thông thường thay vì state
-    const avatarUri = postAvatar;
+    const postTime = formatTime(item.createdAt);
+    
+    // Default avatar nếu không có avatar
+    const defaultAvatar = 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg';
+    const avatarUri = postAvatar || defaultAvatar;
     const imageUri = postImage;
     
     // Log để debug - chỉ log khi cần thiết
@@ -245,8 +288,12 @@ export default function HomeScreen() {
               }}
             >
               <Image
-                source={{ uri: avatarUri || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg' }}
+                source={{ uri: avatarUri }}
                 style={styles.avatar}
+                defaultSource={{ uri: defaultAvatar }}
+                onError={(error) => {
+                  console.log('Avatar load error for user:', postAuthor, error.nativeEvent.error);
+                }}
               />
               <View style={styles.avatarStatus} />
             </TouchableOpacity>

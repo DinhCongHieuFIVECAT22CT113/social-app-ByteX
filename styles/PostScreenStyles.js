@@ -391,4 +391,46 @@ export default StyleSheet.create({
   actionTextDark: {
     color: '#fff',
   },
+  // Styles cho nội dung bài viết
+  postContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  postText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#111827',
+    marginBottom: 8,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  actionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+  },
 });

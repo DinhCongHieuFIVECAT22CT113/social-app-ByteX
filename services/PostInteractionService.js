@@ -153,11 +153,24 @@ export async function addComment(postId, userId, content, displayName, avatar) {
     if (avatar) commentData.avatar = avatar;
     // Thêm comment vào Firestore
     const docRef = await addDoc(commentsRef, commentData);
-    // Cập nhật số lượng comment trong document post (tăng 1)
-    const postRef = doc(db, 'posts', postId);
-    await updateDoc(postRef, {
-      comments: increment(1)
-    });
+    console.log("Comment added with ID:", docRef.id);
+    
+    try {
+      // Cập nhật số lượng comment trong document post (tăng 1)
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      if (postSnap.exists()) {
+        await updateDoc(postRef, {
+          comments: increment(1)
+        });
+      } else {
+        console.error("Post document does not exist:", postId);
+      }
+    } catch (updateError) {
+      // Nếu cập nhật số lượng comment thất bại, chỉ log lỗi, không throw vì comment đã được thêm thành công
+      console.error("Error updating comment count:", updateError);
+    }
+    
     // Trả về id của comment vừa thêm
     return docRef.id;
   } catch (error) {
@@ -245,6 +258,74 @@ export function listenComments(postId, callback) {
     // Ghi log lỗi nếu không thể thiết lập listener
     console.error("Error setting up comments listener:", error);
     return () => {};
+  }
+}
+
+// Toggle like/unlike cho một bài viết
+export async function toggleLike(postId, userId) {
+  try {
+    // Kiểm tra xem postId và userId có hợp lệ không
+    if (!postId || postId === 'testPostId') {
+      console.error("Invalid postId:", postId);
+      throw new Error("ID bài viết không hợp lệ");
+    }
+    if (!userId) {
+      console.error("Invalid userId:", userId);
+      throw new Error("ID người dùng không hợp lệ");
+    }
+
+    console.log(`Attempting to toggle like for post: ${postId} by user: ${userId}`);
+    
+    // Kiểm tra xem người dùng đã like bài viết này chưa
+    const likesRef = collection(db, 'posts', postId, 'likes');
+    const q = query(likesRef, where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      // Chưa like -> thêm like
+      const likeData = { 
+        userId, 
+        createdAt: Date.now() 
+      };
+      const docRef = await addDoc(likesRef, likeData);
+      console.log("Like added with ID:", docRef.id);
+      
+      try {
+        // Cập nhật số lượng like trong document post (tăng 1)
+        const postRef = doc(db, 'posts', postId);
+        const postSnap = await getDoc(postRef);
+        if (postSnap.exists()) {
+          await updateDoc(postRef, {
+            likes: increment(1)
+          });
+        }
+      } catch (updateError) {
+        console.error("Error updating like count:", updateError);
+      }
+      return { action: 'liked', success: true };
+    } else {
+      // Đã like -> bỏ like
+      const likeDoc = snapshot.docs[0];
+      await deleteDoc(doc(db, 'posts', postId, 'likes', likeDoc.id));
+      console.log("Like removed");
+      
+      try {
+        // Cập nhật số lượng like trong document post (giảm 1)
+        const postRef = doc(db, 'posts', postId);
+        const postSnap = await getDoc(postRef);
+        if (postSnap.exists()) {
+          await updateDoc(postRef, {
+            likes: increment(-1)
+          });
+        }
+      } catch (updateError) {
+        console.error("Error updating like count:", updateError);
+      }
+      return { action: 'unliked', success: true };
+    }
+  } catch (error) {
+    console.error("Error toggling like:", error);
+    throw error;
   }
 }
 

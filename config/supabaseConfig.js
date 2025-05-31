@@ -81,10 +81,10 @@ const DEFAULT_BUCKETS = ['avatars', 'images', 'public', 'media'];
 // Hàm tiện ích để tải lên file vào Supabase Storage
 export const uploadToSupabase = async (file, bucket = 'public', path) => {
   try {
-    // Trong môi trường development, trả về URL placeholder ngay lập tức
+    // Trong môi trường development, trả về URL placeholder để tránh lỗi RLS
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
-      console.log('Development mode: returning placeholder image');
-      return 'https://placehold.co/400x400?text=Image+Upload+Success';
+      console.log('Development mode: returning placeholder image to avoid RLS issues');
+      return 'https://placehold.co/400x400?text=Dev+Mode+Avatar';
     }
     
     // Sử dụng bucket được cung cấp hoặc mặc định là 'public'

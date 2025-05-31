@@ -183,7 +183,7 @@ export default function PostScreen({ route }) {
   const pickImage = async () => {
     try {
       let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: [ImagePicker.MediaType.Images],
         allowsEditing: true,
         aspect: [4, 3],
         quality: 1,
@@ -306,22 +306,97 @@ export default function PostScreen({ route }) {
 
       {/* User info and post input */}
       <View style={styles.userRow}>
-        <View style={styles.userAvatar} />
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>Tên Tài Khoản</Text>
-          <View style={styles.userOptionsRow}>
-            <TouchableOpacity style={styles.userOptionBtn}>
-              <FontAwesomeIcon icon={faUserFriends} size={12} color="black" />
-              <Text style={styles.userOptionText}>Bạn bè</Text>
+        {postId === 'testPostId' ? (
+          // Hiển thị thông tin người dùng hiện tại khi tạo bài viết mới
+          <>
+            <View style={styles.userAvatar} />
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{auth.currentUser?.displayName || 'Tên Tài Khoản'}</Text>
+              <View style={styles.userOptionsRow}>
+                <TouchableOpacity style={styles.userOptionBtn}>
+                  <FontAwesomeIcon icon={faUserFriends} size={12} color="black" />
+                  <Text style={styles.userOptionText}>Bạn bè</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.userOptionBtn}>
+                  <Text style={styles.userOptionText}>+ Album</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity style={styles.userTimeBtn}>
+                <FontAwesomeIcon icon={faClock} size={12} color="black" />
+                <Text style={styles.userTimeText}>Thời gian đăng</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          // Hiển thị thông tin bài viết khi xem chi tiết
+          <>
+            <Image 
+              source={{ 
+                uri: post?.avatar || post?.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg' 
+              }}
+              style={[styles.userAvatar, { borderRadius: 25 }]}
+            />
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, isDark && { color: '#fff' }]}>
+                {post?.displayName || post?.author || 'Người dùng ByteX'}
+              </Text>
+              <Text style={[styles.userTimeText, isDark && { color: '#ccc' }]}>
+                {formatPostTime(post?.createdAt)}
+              </Text>
+            </View>
+          </>
+        )}
+      </View>
+
+      {/* Nội dung bài viết */}
+      {postId !== 'testPostId' && post && (
+        <View style={[styles.postContent, isDark && { backgroundColor: '#1f1f1f' }]}>
+          {post.content && (
+            <Text style={[styles.postText, isDark && { color: '#fff' }]}>
+              {post.content}
+            </Text>
+          )}
+          {post.image && (
+            <Image 
+              source={{ uri: post.image }}
+              style={{ width: '100%', height: 300, borderRadius: 12, marginTop: 12 }}
+              resizeMode="cover"
+            />
+          )}
+          
+          {/* Nút Like, Comment, Share */}
+          <View style={styles.actionRow}>
+            <TouchableOpacity 
+              style={[styles.actionBtn, liked && { backgroundColor: 'rgba(225, 29, 72, 0.1)' }]}
+              onPress={handleToggleLike}
+            >
+              <FontAwesomeIcon 
+                icon={faThumbsUp} 
+                size={18} 
+                color={liked ? '#e11d48' : (isDark ? '#fff' : '#000')} 
+              />
+              <Text style={[
+                styles.actionText, 
+                liked && { color: '#e11d48' },
+                isDark && !liked && { color: '#fff' }
+              ]}>
+                {likes.length} {liked ? 'Đã thích' : 'Thích'}
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.userOptionBtn}>
-              <Text style={styles.userOptionText}>+ Album</Text>
+            
+            <TouchableOpacity style={styles.actionBtn}>
+              <FontAwesomeIcon icon={faCommentDots} size={18} color={isDark ? '#fff' : '#000'} />
+              <Text style={[styles.actionText, isDark && { color: '#fff' }]}>
+                {comments.length} Bình luận
+              </Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.userTimeBtn}>
-            <FontAwesomeIcon icon={faClock} size={12} color="black" />
-            <Text style={styles.userTimeText}>Thời gian đăng</Text>
-          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Form tạo bài viết mới */}
+      {postId === 'testPostId' && (
+        <View style={styles.userInfo}>
           <TextInput
             style={styles.postInput}
             placeholder="Bạn đang nghĩ gì ..." // Gợi ý nhập caption bài viết
@@ -337,12 +412,14 @@ export default function PostScreen({ route }) {
             />
           )}
         </View>
+      )}
       </View>
 
-      <View style={styles.divider} />
-
-      {/* Buttons group */}
-      <View style={styles.groupBtn}>
+      {/* Buttons group - chỉ hiển thị khi tạo bài viết mới */}
+      {postId === 'testPostId' && (
+        <>
+          <View style={styles.divider} />
+          <View style={styles.groupBtn}>
         <TouchableOpacity style={styles.groupBtnItem} onPress={pickImage}>
           <FontAwesomeIcon icon={faCamera} size={14} color="white" />
           <Text style={styles.groupBtnText}>Ảnh/Video</Text>
@@ -371,7 +448,9 @@ export default function PostScreen({ route }) {
           <FontAwesomeIcon icon={faCamera} size={14} color="white" />
           <Text style={styles.groupBtnText}>Camera</Text>
         </TouchableOpacity>
-      </View>
+          </View>
+        </>
+      )}
 
       {/* Khu vực bình luận */}
       {postId !== 'testPostId' && (

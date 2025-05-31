@@ -1,0 +1,53 @@
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      // Quy tắc cho collection users
+      match /users/{userId} {
+        // Cho phép đọc và ghi nếu người dùng đã đăng nhập và là chủ sở hữu document
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+        // Cho phép đọc thông tin cơ bản của user khác (cho hiển thị tên, avatar)
+        allow read: if request.auth != null;
+      }
+      
+      // Quy tắc cho collection posts
+      match /posts/{postId} {
+        // Cho phép đọc nếu đã đăng nhập
+        allow read: if request.auth != null;
+        // Cho phép tạo bài viết nếu đã đăng nhập
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+        // Cho phép cập nhật bài viết nếu là chủ sở hữu hoặc cập nhật like/comment count
+        allow update: if request.auth != null && 
+          (request.auth.uid == resource.data.userId || 
+          (request.writeFields.hasOnly(['likes', 'comments']) && request.auth != null));
+        // Cho phép xóa nếu là chủ sở hữu
+        allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+        
+        // Quy tắc cho subcollection likes
+        match /likes/{likeId} {
+          // Cho phép đọc nếu đã đăng nhập
+          allow read: if request.auth != null;
+          // Cho phép tạo like nếu đã đăng nhập và userId trong data trùng với auth.uid
+          allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+          // Cho phép xóa like nếu đã đăng nhập và là chủ sở hữu like
+          allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+        }
+        
+        // Quy tắc cho subcollection comments
+        match /comments/{commentId} {
+          // Cho phép đọc nếu đã đăng nhập
+          allow read: if request.auth != null;
+          // Cho phép tạo comment nếu đã đăng nhập và userId trong data trùng với auth.uid
+          allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+          // Cho phép cập nhật comment nếu là chủ sở hữu
+          allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+          // Cho phép xóa comment nếu là chủ sở hữu
+          allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+        }
+      }
+      
+      // Quy tắc mặc định: từ chối tất cả các truy cập khác
+      match /{document=**} {
+        allow read, write: if false;
+      }
+    }
+  }

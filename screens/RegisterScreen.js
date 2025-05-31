@@ -51,7 +51,7 @@ export default function ByteXRegister() {
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Welcome')}>
           <Text style={{ color: '#fff', fontSize: 20 }}>←</Text>
         </TouchableOpacity>
         <Image

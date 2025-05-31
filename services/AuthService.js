@@ -1,4 +1,4 @@
-// AuthService.js
+    // AuthService.js
 // Dịch vụ xác thực người dùng: đăng ký, đăng nhập, đăng xuất, đổi avatar, xử lý like, và màn hình Feed
 // Sử dụng Firebase Auth, Firestore, AsyncStorage, ImagePicker, v.v.
 
@@ -93,11 +93,11 @@ export const handleLogout = async (navigation) => {
 // 2. Upload ảnh lên Storage
 // 3. Cập nhật avatar trên Auth và Firestore
 // =======================
-async function handleChangeAvatar() {
+export async function handleChangeAvatar() {
   try {
     // 1. Chọn ảnh từ thư viện (cho phép chỉnh sửa, tỉ lệ 1:1, chất lượng 0.8)
     const result = await ImagePicker.launchImageLibraryAsync({ 
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: [ImagePicker.MediaType.Images],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,

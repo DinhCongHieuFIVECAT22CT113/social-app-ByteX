@@ -17,11 +17,11 @@ export async function updateUserProfile({ displayName, photoURL }) {
 }
 
 // =======================
-// Cập nhật thông tin mở rộng (bio, v.v.) trên Firestore
+// Cập nhật thông tin mở rộng (bio, avatar, v.v.) trên Firestore
 // uid: id người dùng
-// Tham số: object chứa các trường cần cập nhật (ví dụ: bio)
+// Tham số: object chứa các trường cần cập nhật (ví dụ: bio, avatar)
 // =======================
-export async function updateUserFirestore(uid, { bio }) {
+export async function updateUserFirestore(uid, updateData) {
   const userRef = doc(db, 'users', uid); // Tham chiếu đến document user theo uid
   
   // Kiểm tra xem document đã tồn tại chưa
@@ -29,11 +29,14 @@ export async function updateUserFirestore(uid, { bio }) {
   
   if (docSnap.exists()) {
     // Nếu document đã tồn tại, cập nhật nó
-    await updateDoc(userRef, { bio });
+    await updateDoc(userRef, { 
+      ...updateData,
+      updatedAt: Date.now()
+    });
   } else {
     // Nếu document chưa tồn tại, tạo mới
     await setDoc(userRef, { 
-      bio,
+      ...updateData,
       createdAt: Date.now(),
       updatedAt: Date.now()
     });

@@ -40,7 +40,7 @@ export default function ByteXLogin() {
           accessibilityLabel="Back"
           style={styles.backBtn}
           activeOpacity={0.7}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Welcome')}
         >
           <FontAwesomeIcon icon={faArrowLeft} size={20} color="white" />
         </TouchableOpacity>
