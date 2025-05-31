@@ -3,6 +3,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 // Thay thế các giá trị này bằng thông tin từ dự án Supabase của bạn
 const supabaseUrl = 'https://vldwncyffhamfqtqjoxc.supabase.co'; // Thay thế bằng URL thực của bạn
@@ -36,80 +38,203 @@ try {
   };
 }
 
+// Hàm chuyển đổi file URI thành base64
+const fileToBase64 = async (uri) => {
+  try {
+    // Đảm bảo URI là hợp lệ với Expo FileSystem
+    const fileUri = uri;
+    
+    // Kiểm tra xem URI có hợp lệ với Expo FileSystem không
+    const fileInfo = await FileSystem.getInfoAsync(fileUri);
+    if (!fileInfo.exists) {
+      console.log('File does not exist at path:', fileUri);
+      throw new Error('File does not exist');
+    }
+    
+    // Đọc file dưới dạng base64
+    const base64 = await FileSystem.readAsStringAsync(fileUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    
+    // Xác định loại file dựa trên phần mở rộng
+    let contentType = 'image/jpeg'; // Mặc định
+    if (uri.endsWith('.png')) {
+      contentType = 'image/png';
+    } else if (uri.endsWith('.gif')) {
+      contentType = 'image/gif';
+    } else if (uri.endsWith('.webp')) {
+      contentType = 'image/webp';
+    }
+    
+    return `data:${contentType};base64,${base64}`;
+  } catch (error) {
+    console.error('Error converting file to base64:', error);
+    return null;
+  }
+};
+
 export { supabase };
 
+// Danh sách các bucket mặc định để thử
+const DEFAULT_BUCKETS = ['avatars', 'images', 'public', 'media'];
+
 // Hàm tiện ích để tải lên file vào Supabase Storage
-export const uploadToSupabase = async (file, bucket, path) => {
+export const uploadToSupabase = async (file, bucket = 'public', path) => {
   try {
-    console.log(`Attempting to upload to Supabase bucket: ${bucket}, path: ${path}`);
+    // Sử dụng bucket được cung cấp hoặc mặc định là 'public'
+    const bucketName = bucket || 'public';
+    console.log(`Attempting to upload to Supabase bucket: ${bucketName}, path: ${path}`);
     
     // Kiểm tra xem Supabase đã được khởi tạo đúng chưa
     if (!supabase || !supabase.storage) {
       throw new Error('Supabase client not properly initialized');
     }
     
-    // Chuyển đổi URI thành Blob
-    let blob;
-    try {
-      // Thêm timeout để tránh treo quá lâu
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      
-      const response = await fetch(file, { 
-        signal: controller.signal,
-        method: 'GET',
-        headers: {
-          'Accept': 'image/*',
-        },
-        cache: 'no-store'
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
-      }
-      
-      blob = await response.blob();
-      
-      if (!blob || blob.size === 0) {
-        throw new Error('Empty blob received from fetch');
-      }
-      
-      console.log(`Blob created successfully: ${blob.size} bytes, type: ${blob.type}`);
-    } catch (fetchError) {
-      console.error('Fetch error details:', fetchError);
-      
-      // Xử lý lỗi mạng
-      if (fetchError.name === 'AbortError') {
-        throw new Error('Fetch operation timed out');
-      } else if (fetchError.message && fetchError.message.includes('Network request failed')) {
-        throw new Error('Network request failed');
-      }
-      throw fetchError;
-    }
-    
     // Tạo tên file duy nhất nếu không có path
     const filePath = path || `${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
     
-    // Tải lên file vào bucket được chỉ định
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, blob, {
-        cacheControl: '3600',
-        upsert: true
-      });
+    // Kiểm tra xem file có phải là URI local không (bắt đầu bằng file:// hoặc content://)
+    const isLocalUri = file.startsWith('file://') || file.startsWith('content://');
+    
+    // Đọc nội dung file
+    let fileContent;
+    let contentType = 'image/jpeg'; // Mặc định
+    
+    if (isLocalUri) {
+      console.log('Uploading local file');
+      try {
+        // Đọc file dưới dạng base64
+        fileContent = await FileSystem.readAsStringAsync(file, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        
+        if (!fileContent) {
+          throw new Error('Failed to read file content');
+        }
+        
+        // Xác định loại file dựa trên phần mở rộng
+        if (file.endsWith('.png')) {
+          contentType = 'image/png';
+        } else if (file.endsWith('.gif')) {
+          contentType = 'image/gif';
+        } else if (file.endsWith('.webp')) {
+          contentType = 'image/webp';
+        }
+        
+        console.log('Successfully read file content');
+      } catch (error) {
+        console.error('Error reading local file:', error);
+        throw new Error('Failed to read local file: ' + error.message);
+      }
+    } else {
+      // Xử lý URI từ internet
+      try {
+        console.log('Fetching remote file');
+        const response = await fetch(file);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
+        }
+        
+        const blob = await response.blob();
+        contentType = blob.type || 'image/jpg';
+        
+        // Chuyển blob thành base64
+        const reader = new FileReader();
+        fileContent = await new Promise((resolve, reject) => {
+          reader.onload = () => {
+            // Lấy phần base64 từ data URL
+            const base64 = reader.result.split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        
+        console.log('Successfully fetched and converted remote file');
+      } catch (error) {
+        console.error('Error fetching remote file:', error);
+        throw error;
+      }
+    }
+    
+    // Thử tải lên với bucket được chỉ định
+    let uploadResult;
+    let uploadError;
+    
+    try {
+      uploadResult = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, fileContent, {
+          contentType: contentType,
+          cacheControl: '3600',
+          upsert: true
+        });
       
-    if (error) {
-      console.error('Supabase upload error:', error);
-      throw error;
+      if (uploadResult.error) {
+        uploadError = uploadResult.error;
+        console.log(`Error uploading to bucket "${bucketName}": ${uploadError.message}`);
+      } else {
+        console.log(`Successfully uploaded to bucket "${bucketName}"`);
+      }
+    } catch (error) {
+      uploadError = error;
+      console.log(`Exception when uploading to bucket "${bucketName}": ${error.message}`);
+    }
+    
+    // Nếu bucket không tồn tại, thử các bucket mặc định khác
+    if (uploadError && uploadError.message && uploadError.message.includes('Bucket not found')) {
+      console.log('Bucket not found, trying default buckets...');
+      
+      let successBucket = null;
+      
+      // Thử từng bucket mặc định
+      for (const defaultBucket of DEFAULT_BUCKETS) {
+        // Bỏ qua bucket đã thử
+        if (defaultBucket === bucketName) continue;
+        
+        try {
+          console.log(`Trying default bucket: ${defaultBucket}`);
+          uploadResult = await supabase.storage
+            .from(defaultBucket)
+            .upload(filePath, fileContent, {
+              contentType: contentType,
+              cacheControl: '3600',
+              upsert: true
+            });
+          
+          if (!uploadResult.error) {
+            console.log(`Successfully uploaded to default bucket "${defaultBucket}"`);
+            // Lưu bucket thành công để sử dụng sau
+            successBucket = defaultBucket;
+            uploadError = null;
+            break;
+          } else {
+            console.log(`Error with default bucket "${defaultBucket}": ${uploadResult.error.message}`);
+          }
+        } catch (error) {
+          console.log(`Exception with default bucket "${defaultBucket}": ${error.message}`);
+        }
+      }
+      
+      // Cập nhật bucket name nếu tìm thấy bucket thành công
+      if (successBucket) {
+        console.log(`Using successful bucket: ${successBucket}`);
+        bucketName = successBucket;
+      }
+    }
+    
+    // Nếu vẫn có lỗi sau khi thử tất cả các bucket
+    if (uploadError) {
+      console.error('All bucket upload attempts failed:', uploadError);
+      throw uploadError;
     }
     
     console.log('File uploaded successfully to Supabase');
     
     // Tạo URL công khai cho file
     const { data: publicUrlData } = supabase.storage
-      .from(bucket)
+      .from(bucketName)
       .getPublicUrl(filePath);
     
     if (!publicUrlData || !publicUrlData.publicUrl) {
@@ -123,15 +248,8 @@ export const uploadToSupabase = async (file, bucket, path) => {
     
     // Trong môi trường development, trả về URL placeholder
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
-      if (error.message && error.message.includes('Network request failed')) {
-        return 'https://placehold.co/400x400?text=Image+Upload+Failed';
-      } else if (error.message && error.message.includes('bucket')) {
-        return 'https://placehold.co/400x400?text=Image+Upload+Failed';
-      } else if (error.message && error.message.includes('timeout')) {
-        return 'https://placehold.co/400x400?text=Image+Upload+Failed';
-      } else {
-        return 'https://placehold.co/400x400?text=Image+Upload+Failed';
-      }
+      console.log('Returning placeholder image due to error in development mode');
+      return 'https://placehold.co/400x400?text=Image+Upload+Failed';
     }
     
     // Trong môi trường production, ném lỗi để xử lý ở lớp trên

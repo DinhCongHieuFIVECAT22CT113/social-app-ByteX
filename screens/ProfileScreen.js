@@ -25,16 +25,16 @@ import { useNavigation } from '@react-navigation/native';
 import { auth } from '../config/firebaseConfig';
 import { logout } from '../services/AuthService';
 import { getPosts } from '../services/PostService';
-import { useColorScheme } from 'react-native';
 import styles from '../styles/ProfileScreenStyles';
+import { useTheme } from '../context/ThemeContext';
 
 // ProfileScreen.js
 // Màn hình trang cá nhân người dùng, hiển thị thông tin, ảnh, follower, following
 
 export default function ProfileScreen() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const toggleDarkMode = () => {};
+  // Sử dụng context theme thay vì useColorScheme
+  const { isDarkMode, toggleDarkMode } = useTheme();
+  const isDark = isDarkMode;
   const navigation = useNavigation();
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);

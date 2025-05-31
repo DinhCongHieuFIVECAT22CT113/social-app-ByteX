@@ -19,16 +19,13 @@ import {
   faShield, 
   faInfoCircle 
 } from '@fortawesome/free-solid-svg-icons';
-import { useColorScheme } from 'react-native';
 import { auth } from '../config/firebaseConfig';
+import { useTheme } from '../context/ThemeContext';
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
-  const isSystemTheme = true;
-  const toggleDarkMode = () => {};
-  const setSystemTheme = () => {};
+  // Sử dụng context theme thay vì useColorScheme
+  const { isDarkMode, isSystemTheme, toggleDarkMode, setSystemTheme } = useTheme();
   
   // Lấy thông tin người dùng hiện tại
   const user = auth.currentUser;
