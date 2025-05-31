@@ -49,16 +49,16 @@ export async function login(email, password) {
 // =======================
 export async function logout() {
   try {
-    // Đăng xuất tài khoản hiện tại
+    // Đăng xuất tài khoản hiện tại khỏi Firebase Auth
     await signOut(auth);
-    
-    // Xóa thông tin người dùng từ AsyncStorage
+    // Xóa thông tin người dùng từ AsyncStorage (cache, settings, preferences)
     const keys = ['user_data', 'user_settings', 'user_preferences'];
     await AsyncStorage.multiRemove(keys);
-    
+    // Log ra console khi đăng xuất thành công
     console.log("Đăng xuất thành công");
     return true;
   } catch (error) {
+    // Log lỗi nếu có vấn đề khi đăng xuất
     console.error("Lỗi khi đăng xuất:", error);
     throw error;
   }
@@ -72,17 +72,16 @@ export const handleLogout = async (navigation) => {
   try {
     // Gọi hàm logout để đăng xuất
     await logout();
-    
-    // Chuyển hướng về màn hình đăng nhập
+    // Chuyển hướng về màn hình Welcome (reset navigation stack)
     if (navigation) {
       navigation.reset({
         index: 0,
         routes: [{ name: 'Welcome' }],
       });
     }
-    
     return true;
   } catch (error) {
+    // Log lỗi nếu có vấn đề khi xử lý đăng xuất
     console.error("Lỗi khi xử lý đăng xuất:", error);
     return false;
   }
@@ -96,32 +95,27 @@ export const handleLogout = async (navigation) => {
 // =======================
 async function handleChangeAvatar() {
   try {
-    // 1. Chọn ảnh từ thư viện
+    // 1. Chọn ảnh từ thư viện (cho phép chỉnh sửa, tỉ lệ 1:1, chất lượng 0.8)
     const result = await ImagePicker.launchImageLibraryAsync({ 
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
     });
-    
-    // Nếu người dùng hủy bỏ, thoát hàm
+    // Nếu người dùng hủy bỏ hoặc không chọn ảnh, thoát hàm
     if (result.canceled || !result.assets || result.assets.length === 0) return;
-    
-    const uri = result.assets[0].uri; // Expo SDK 48+
-    
-    // SỬA: Luôn dùng biến auth đã khởi tạo từ firebaseConfig thay vì tạo mới bằng getAuth(app)
+    const uri = result.assets[0].uri; // Lấy đường dẫn ảnh
+    // Lấy user hiện tại từ Firebase Auth
     const user = auth.currentUser;
     if (!user) throw new Error('No user logged in');
-
-    // 2. Upload ảnh lên Storage
+    // 2. Upload ảnh lên Firebase Storage
     const photoURL = await uploadImageAsync(uri, `avatars/${user.uid}.jpg`);
-
     // 3. Cập nhật avatar trên Auth và Firestore
     await updateUserProfile({ displayName: user.displayName, photoURL });
     await updateUserFirestore(user.uid, { avatar: photoURL });
-    
     return photoURL;
   } catch (error) {
+    // Log lỗi nếu có vấn đề khi đổi avatar
     console.error("Error changing avatar:", error);
     throw error;
   }
@@ -143,18 +137,23 @@ async function handleLike(postId, userId) {
 // Component FeedScreen: Hiển thị danh sách bài viết (news feed)
 // =======================
 export default function FeedScreen() {
-  const [posts, setPosts] = useState([]); // Danh sách bài viết
-  const [lastDoc, setLastDoc] = useState(null); // Document cuối cùng để phân trang
-  const [loading, setLoading] = useState(false); // Trạng thái loading khi load thêm bài viết
-  const [refreshing, setRefreshing] = useState(false); // Trạng thái refreshing khi kéo để làm mới
-  const colorScheme = useColorScheme(); // 'dark' hoặc 'light'
+  // State lưu danh sách bài viết
+  const [posts, setPosts] = useState([]); 
+  // State lưu document cuối cùng để phân trang
+  const [lastDoc, setLastDoc] = useState(null); 
+  // State loading khi load thêm bài viết
+  const [loading, setLoading] = useState(false); 
+  // State refreshing khi kéo để làm mới
+  const [refreshing, setRefreshing] = useState(false); 
+  // Lấy theme hiện tại (dark/light)
+  const colorScheme = useColorScheme(); 
 
   // Hàm lấy danh sách bài viết (có phân trang)
   const fetchPosts = async (reset = false) => {
     setLoading(true);
     // Gọi hàm getPostsPaginated để lấy danh sách bài viết có phân trang
     const { posts: newPosts, lastVisible } = await getPostsPaginated(5, reset ? null : lastDoc);
-    // Cập nhật danh sách bài viết và document cuối cùng
+    // Nếu reset thì thay thế toàn bộ, nếu không thì nối thêm vào danh sách cũ
     setPosts(reset ? newPosts : [...posts, ...newPosts]);
     setLastDoc(lastVisible);
     setLoading(false);

@@ -6,10 +6,11 @@ import {
 } from 'react-native';
 import * as PostService from '../services/PostService';
 import { getLikes, getComments } from '../services/CommentService';
-import { likePost } from '../services/PostInteractionService';
+import { likePost, unlikePost, hasUserLiked } from '../services/PostInteractionService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { auth } from '../config/firebaseConfig';
 import styles from '../styles/HomeScreenStyles';
+import LikeButton from '../components/LikeButton';
 
 const PAGE_SIZE = 10;
 
@@ -21,6 +22,7 @@ export default function HomeScreen() {
   const [noMore, setNoMore] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [realtimeEnabled, setRealtimeEnabled] = useState(true);
+  const [likedPosts, setLikedPosts] = useState({}); // Thêm state lưu trạng thái đã like cho từng post
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const navigation = useNavigation();
@@ -129,8 +131,21 @@ export default function HomeScreen() {
     }
   };
 
-  // Like bài viết và rung khi like
-  const handleLike = async (postId) => {
+  // Kiểm tra user đã like các post nào khi load danh sách
+  useEffect(() => {
+    if (!currentUser || !posts.length) return;
+    const fetchLiked = async () => {
+      const result = {};
+      for (const post of posts) {
+        result[post.id] = await hasUserLiked(post.id, currentUser.uid);
+      }
+      setLikedPosts(result);
+    };
+    fetchLiked();
+  }, [posts, currentUser]);
+
+  // Hàm toggle like/unlike
+  const handleToggleLike = async (postId) => {
     if (!auth.currentUser) {
       Alert.alert(
         "Yêu cầu đăng nhập", 
@@ -142,18 +157,21 @@ export default function HomeScreen() {
       );
       return;
     }
-    
     try {
-      await likePost(postId, auth.currentUser.uid);
-      Vibration.vibrate(100); // Rung 100ms
-      
-      // Sau khi like, cập nhật số like cho post đó
+      const alreadyLiked = likedPosts[postId];
+      if (alreadyLiked) {
+        await unlikePost(postId, auth.currentUser.uid);
+      } else {
+        await likePost(postId, auth.currentUser.uid);
+      }
+      // Cập nhật lại trạng thái liked và số like
+      const likesArr = await getLikes(postId);
       setPosts(posts => posts.map(post =>
-        post.id === postId ? { ...post, likes: (post.likes || 0) + 1 } : post
+        post.id === postId ? { ...post, likes: likesArr.length } : post
       ));
+      setLikedPosts(liked => ({ ...liked, [postId]: !alreadyLiked }));
     } catch (error) {
-      console.error("Error liking post:", error);
-      Alert.alert("Lỗi", "Không thể thích bài viết. Vui lòng thử lại.");
+      Alert.alert('Lỗi', 'Không thể cập nhật like.');
     }
   };
 
@@ -265,13 +283,13 @@ export default function HomeScreen() {
               <Text style={{ fontSize: 16 }}>🔁</Text>
               <Text style={styles.actionText}>{item.shares || 0}</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.actionBtn} 
-              onPress={() => handleLike(item.id)}
-            >
-              <Text style={{ fontSize: 18 }}>❤️</Text>
-              <Text style={styles.actionText}>{item.likes || 0}</Text>
-            </TouchableOpacity>
+            <LikeButton
+              postId={item.id}
+              userId={currentUser?.uid}
+              liked={!!likedPosts[item.id]}
+              likeCount={item.likes || 0}
+              onToggleLike={() => handleToggleLike(item.id)}
+            />
             <TouchableOpacity 
               style={styles.actionBtn} 
               onPress={() => navigation.navigate('Comments', { postId: item.id })}

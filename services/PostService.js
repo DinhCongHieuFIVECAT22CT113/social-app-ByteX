@@ -19,12 +19,11 @@ export async function addPost(postData) {
     const postsRef = collection(db, 'posts');
     // Thêm document mới với dữ liệu postData và trường createdAt
     const docRef = await addDoc(postsRef, {
-      ...postData,
+      ...postData, // Truyền toàn bộ dữ liệu bài viết từ tham số
       createdAt: Date.now(), // Thời gian tạo bài viết (timestamp)
-      likes: 0,
-      comments: 0,
+      likes: 0, // Khởi tạo số lượt thích là 0
+      comments: 0, // Khởi tạo số comment là 0
     });
-    
     // Trả về id của document vừa tạo
     return docRef.id;
   } catch (error) {
@@ -40,10 +39,13 @@ export async function addPost(postData) {
 // =======================
 export async function getPostById(postId) {
   try {
+    // Tạo tham chiếu đến document post theo id
     const postRef = doc(db, 'posts', postId);
+    // Lấy dữ liệu document từ Firestore
     const postSnap = await getDoc(postRef);
-    
+    // Kiểm tra document có tồn tại không
     if (postSnap.exists()) {
+      // Trả về object gồm id và dữ liệu post
       return { id: postSnap.id, ...postSnap.data() };
     } else {
       throw new Error("Post không tồn tại");
@@ -62,7 +64,9 @@ export async function getPosts() {
   try {
     // Lấy tất cả document trong collection 'posts'
     const postsRef = collection(db, 'posts');
+    // Sắp xếp theo thời gian tạo mới nhất
     const q = query(postsRef, orderBy('createdAt', 'desc'));
+    // Lấy snapshot dữ liệu từ Firestore
     const snapshot = await getDocs(q);
     // Trả về mảng các post với id và dữ liệu
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -97,7 +101,7 @@ export async function getPostsPaginated(pageSize = 5, lastDoc = null) {
     }
     // Lấy dữ liệu từ Firestore
     const snapshot = await getDocs(q);
-    // Map dữ liệu trả về
+    // Map dữ liệu trả về thành mảng post
     const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     // Lấy document cuối cùng để phân trang tiếp
     const lastVisible = snapshot.docs[snapshot.docs.length - 1];
@@ -116,17 +120,21 @@ export async function getPostsPaginated(pageSize = 5, lastDoc = null) {
 // =======================
 export function listenToPosts(callback, limitCount = 10) {
   try {
+    // Tạo tham chiếu đến collection 'posts'
     const postsRef = collection(db, 'posts');
+    // Tạo query lấy post mới nhất, giới hạn số lượng
     const q = query(
       postsRef,
       orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
-    
+    // Đăng ký lắng nghe realtime với onSnapshot
     return onSnapshot(q, (snapshot) => {
+      // Khi có thay đổi, map dữ liệu thành mảng post
       const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       callback(posts);
     }, (error) => {
+      // Xử lý lỗi khi lắng nghe
       console.error("Error listening to posts:", error);
       callback([]);
     });
@@ -145,7 +153,7 @@ export async function updatePost(postId, updatedData) {
   try {
     // Tạo tham chiếu đến document cần cập nhật
     const postRef = doc(db, 'posts', postId);
-    // Cập nhật dữ liệu
+    // Cập nhật dữ liệu với updatedData
     await updateDoc(postRef, updatedData);
   } catch (error) {
     console.error("Error updating post:", error);
@@ -161,7 +169,7 @@ export async function deletePost(postId) {
   try {
     // Tạo tham chiếu đến document cần xóa
     const postRef = doc(db, 'posts', postId);
-    // Xóa document
+    // Xóa document khỏi Firestore
     await deleteDoc(postRef);
   } catch (error) {
     console.error("Error deleting post:", error);
@@ -182,8 +190,10 @@ export function listenCommentCount(postId, callback) {
     const q = query(commentsRef, where('postId', '==', postId));
     // Lắng nghe realtime số lượng comment
     return onSnapshot(q, (snapshot) => {
-      callback(snapshot.size); // snapshot.size là số comment hiện tại
+      // snapshot.size là số comment hiện tại
+      callback(snapshot.size);
     }, (error) => {
+      // Xử lý lỗi khi lắng nghe
       console.error("Error listening to comment count:", error);
       callback(0);
     });

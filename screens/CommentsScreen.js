@@ -12,9 +12,9 @@ export default function CommentsScreen({ route }) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const postId = route?.params?.postId;
-  const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState('');
-  const [error, setError] = useState('');
+  const [comments, setComments] = useState([]); // Danh sách bình luận của bài viết
+  const [commentText, setCommentText] = useState(''); // Nội dung bình luận người dùng nhập
+  const [error, setError] = useState(''); // Thông báo lỗi (nếu có)
 
   useEffect(() => {
     if (!postId) return;

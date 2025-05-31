@@ -20,6 +20,8 @@ import ImageService from '../services/ImageService';
 import { addPost } from '../services/PostService';
 import { auth } from '../config/firebaseConfig';
 import styles from '../styles/PostScreenStyles';
+import LikeButton from '../components/LikeButton';
+import { likePost, unlikePost, hasUserLiked } from '../services/PostInteractionService';
 
 // PostScreen.js
 // Màn hình chi tiết bài viết, cho phép like, comment, hiển thị thông tin bài viết
@@ -43,6 +45,7 @@ export default function PostScreen({ route, navigation }) {
   const [comments, setComments] = useState([]);
   const [caption, setCaption] = useState('');
   const [image, setImage] = useState(null);
+  const [liked, setLiked] = useState(false);
 
   // Lấy danh sách like/comment khi cần
   const fetchLikes = async () => {
@@ -55,20 +58,30 @@ export default function PostScreen({ route, navigation }) {
     setComments(data);
   };
 
+  // Kiểm tra đã like chưa khi load post
+  useEffect(() => {
+    if (!postId || !userId) return;
+    hasUserLiked(postId, userId).then(setLiked);
+  }, [postId, userId, likes.length]);
+
   // Gọi khi bấm Like
-  const handleLike = async () => {
+  const handleToggleLike = async () => {
+    if (!userId) {
+      Alert.alert('Lỗi', 'Bạn cần đăng nhập để thích bài viết!');
+      return;
+    }
     try {
-      if (!userId) {
-        Alert.alert('Lỗi', 'Bạn cần đăng nhập để thích bài viết!');
-        return;
+      if (liked) {
+        await unlikePost(postId, userId);
+      } else {
+        await likePost(postId, userId);
       }
-      await addLike(postId, userId);
-      fetchLikes();
-      // Rung nhẹ khi like thành công
+      const newLikes = await getLikes(postId);
+      setLikes(newLikes);
+      setLiked(!liked);
       Vibration.vibrate(100);
     } catch (error) {
-      console.error("Error liking post:", error);
-      Alert.alert('Lỗi', 'Không thể thích bài viết. Vui lòng thử lại sau.');
+      Alert.alert('Lỗi', 'Không thể cập nhật like.');
     }
   };
 
@@ -211,13 +224,17 @@ export default function PostScreen({ route, navigation }) {
           </TouchableOpacity>
           <TextInput
             style={styles.postInput}
-            placeholder="Bạn đang nghĩ gì ..."
-            value={caption}
-            onChangeText={setCaption}
-            multiline
+            placeholder="Bạn đang nghĩ gì ..." // Gợi ý nhập caption bài viết
+            value={caption} // Giá trị caption hiện tại
+            onChangeText={setCaption} // Cập nhật caption khi người dùng nhập
+            multiline // Cho phép nhập nhiều dòng
           />
+          {/* Hiển thị ảnh đã chọn nếu có */}
           {image && (
-            <Image source={{ uri: image }} style={{ width: '100%', height: 200, borderRadius: 12, marginTop: 12 }} />
+            <Image 
+              source={{ uri: image }} // Nguồn ảnh từ uri đã chọn
+              style={{ width: '100%', height: 200, borderRadius: 12, marginTop: 12 }} // Style ảnh xem trước
+            />
           )}
         </View>
       </View>
@@ -258,10 +275,13 @@ export default function PostScreen({ route, navigation }) {
 
       {/* Like & Comment section */}
       <View style={styles.likeCommentRow}>
-        <TouchableOpacity onPress={handleLike} style={styles.likeBtn}>
-          <FontAwesomeIcon icon={faThumbsUp} size={18} color="#2563eb" />
-          <Text style={styles.likeText}>{likes.length} Like</Text>
-        </TouchableOpacity>
+        <LikeButton
+          postId={postId}
+          userId={userId}
+          liked={liked}
+          likeCount={likes.length}
+          onToggleLike={handleToggleLike}
+        />
         <FontAwesomeIcon icon={faCommentDots} size={18} color="#22c55e" style={styles.commentIcon} />
         <Text style={styles.commentText}>{comments.length} Comment</Text>
       </View>
