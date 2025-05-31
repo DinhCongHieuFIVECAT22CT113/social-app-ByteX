@@ -1,7 +1,7 @@
 import { auth } from '../config/firebaseConfig';
 import { updateProfile } from 'firebase/auth';
 import { db } from '../config/firebaseConfig';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 
 // UserService.js
 // Dịch vụ cập nhật thông tin người dùng (profile, bio) trên Firebase Auth và Firestore
@@ -23,5 +23,19 @@ export async function updateUserProfile({ displayName, photoURL }) {
 // =======================
 export async function updateUserFirestore(uid, { bio }) {
   const userRef = doc(db, 'users', uid); // Tham chiếu đến document user theo uid
-  await updateDoc(userRef, { bio }); // Cập nhật trường bio trên Firestore
+  
+  // Kiểm tra xem document đã tồn tại chưa
+  const docSnap = await getDoc(userRef);
+  
+  if (docSnap.exists()) {
+    // Nếu document đã tồn tại, cập nhật nó
+    await updateDoc(userRef, { bio });
+  } else {
+    // Nếu document chưa tồn tại, tạo mới
+    await setDoc(userRef, { 
+      bio,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+  }
 }

@@ -21,11 +21,10 @@ const LandingScreen = ({ navigation }) => {
     >
       {/* Logo Section */}
       <View style={styles.logoRow}>
-        <Text style={[
-          styles.logoText,
-          isDark ? styles.logoTextDark : styles.logoTextLight
-        ]}>BYTE</Text>
-        <Text style={styles.logoX}>X</Text>
+        <Image
+          source={require('../assets/logobytex-1.png')}
+          style={styles.logoImage}
+        />
       </View>
       
       {/* Hands Image */}

@@ -1,11 +1,18 @@
 import React from 'react';
-import { View } from 'react-native';
+import { View, StatusBar } from 'react-native';
 import AppNavigator from './navigation/navigation';
+import { ThemeProvider } from './context/ThemeContext';
 
 export default function App() {
   return (
-    <View style={{ flex: 1 }}>
-      <AppNavigator />
-    </View>
+    <ThemeProvider>
+      <View style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+        <StatusBar 
+          barStyle={'dark-content'} 
+          backgroundColor={'#f5f5f5'}
+        />
+        <AppNavigator />
+      </View>
+    </ThemeProvider>
   );
 }

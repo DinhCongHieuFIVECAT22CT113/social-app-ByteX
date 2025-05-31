@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, Image, TouchableOpacity,
-  ActivityIndicator, FlatList, useColorScheme, Vibration,
-  RefreshControl, StatusBar, Alert
+  ActivityIndicator, FlatList, Vibration,
+  StatusBar, Alert, useColorScheme
 } from 'react-native';
+import CustomRefreshControl from '../components/CustomRefreshControl';
 import * as PostService from '../services/PostService';
 import { getLikes, getComments } from '../services/CommentService';
 import { likePost, unlikePost, hasUserLiked } from '../services/PostInteractionService';
@@ -23,52 +24,8 @@ export default function HomeScreen() {
   const [currentUser, setCurrentUser] = useState(null);
   const [realtimeEnabled, setRealtimeEnabled] = useState(true);
   const [likedPosts, setLikedPosts] = useState({}); // Thêm state lưu trạng thái đã like cho từng post
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = false; // Sử dụng theme sáng mặc định
   const navigation = useNavigation();
-
-  // Lấy thông tin người dùng hiện tại
-  useEffect(() => {
-    const updateCurrentUser = () => {
-      const user = auth.currentUser;
-      if (user) {
-        setCurrentUser({
-          uid: user.uid,
-          displayName: user.displayName || 'Người dùng ByteX',
-          email: user.email || '',
-          photoURL: user.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg'
-        });
-      } else {
-        setCurrentUser(null);
-      }
-    };
-
-    // Lắng nghe sự thay đổi trạng thái đăng nhập
-    const unsubscribe = auth.onAuthStateChanged(updateCurrentUser);
-    
-    return () => unsubscribe();
-  }, []);
-
-  // Lắng nghe bài viết realtime khi màn hình được focus
-  useFocusEffect(
-    React.useCallback(() => {
-      if (realtimeEnabled) {
-        const unsubscribe = PostService.listenToPosts((newPosts) => {
-          if (newPosts && newPosts.length > 0) {
-            setPosts(newPosts);
-          }
-        }, PAGE_SIZE);
-        
-        return () => {
-          if (unsubscribe) {
-            unsubscribe();
-          }
-        };
-      } else {
-        loadMorePosts(true);
-      }
-    }, [realtimeEnabled])
-  );
 
   // Lấy số like/comment thực tế cho từng post
   const fetchLikeCommentCounts = async (post) => {
@@ -119,6 +76,47 @@ export default function HomeScreen() {
     }
   };
 
+  // Lấy thông tin người dùng hiện tại
+  useEffect(() => {
+    const updateCurrentUser = () => {
+      const user = auth.currentUser;
+      if (user) {
+        setCurrentUser({
+          uid: user.uid,
+          displayName: user.displayName || 'Người dùng ByteX',
+          email: user.email || '',
+          photoURL: user.photoURL || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg'
+        });
+      } else {
+        setCurrentUser(null);
+      }
+    };
+
+    // Lắng nghe sự thay đổi trạng thái đăng nhập
+    const unsubscribe = auth.onAuthStateChanged(updateCurrentUser);
+    
+    return () => unsubscribe();
+  }, []);
+
+  // Lắng nghe bài viết realtime khi màn hình được focus
+  useEffect(() => {
+    if (realtimeEnabled) {
+      const unsubscribe = PostService.listenToPosts((newPosts) => {
+        if (newPosts && newPosts.length > 0) {
+          setPosts(newPosts);
+        }
+      }, PAGE_SIZE);
+      
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
+    } else {
+      loadMorePosts(true);
+    }
+  }, [realtimeEnabled]);
+
   const onRefresh = () => {
     setRefreshing(true);
     if (realtimeEnabled) {
@@ -157,20 +155,27 @@ export default function HomeScreen() {
       );
       return;
     }
+    
     try {
+      Vibration.vibrate(100); // Rung khi nhấn like
+      
       const alreadyLiked = likedPosts[postId];
       if (alreadyLiked) {
         await unlikePost(postId, auth.currentUser.uid);
       } else {
         await likePost(postId, auth.currentUser.uid);
       }
-      // Cập nhật lại trạng thái liked và số like
+      
+      // Cập nhật tạm thời UI trước khi server phản hồi
+      setLikedPosts(liked => ({ ...liked, [postId]: !alreadyLiked }));
+      
+      // Cập nhật số lượng like
       const likesArr = await getLikes(postId);
       setPosts(posts => posts.map(post =>
         post.id === postId ? { ...post, likes: likesArr.length } : post
       ));
-      setLikedPosts(liked => ({ ...liked, [postId]: !alreadyLiked }));
     } catch (error) {
+      console.error("Error toggling like:", error);
       Alert.alert('Lỗi', 'Không thể cập nhật like.');
     }
   };
@@ -205,14 +210,21 @@ export default function HomeScreen() {
     const postContent = item.content || item.caption || '';
     const postImage = item.image || '';
     const postTime = item.createdAt ? new Date(item.createdAt).toLocaleString() : '';
+    // Sử dụng biến thông thường thay vì state
+    const avatarUri = postAvatar;
+    const imageUri = postImage;
     
-    // Log để debug
-    console.log("Rendering post:", { 
-      id: item.id,
-      author: item.author,
-      displayName: item.displayName,
-      userId: item.userId
-    });
+    // Log để debug - chỉ log khi cần thiết
+    if (!postAuthor || !postAvatar) {
+      console.log("Rendering post with missing data:", { 
+        id: item.id,
+        author: item.author,
+        displayName: item.displayName,
+        userId: item.userId,
+        avatar: item.avatar,
+        photoURL: item.photoURL
+      });
+    }
     
     return (
       <TouchableOpacity 
@@ -231,11 +243,8 @@ export default function HomeScreen() {
               }}
             >
               <Image
-                source={{ uri: postAvatar }}
+                source={{ uri: avatarUri || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg' }}
                 style={styles.avatar}
-                onError={(e) => {
-                  console.log("Error loading avatar:", e.nativeEvent.error);
-                }}
               />
               <View style={styles.avatarStatus} />
             </TouchableOpacity>
@@ -269,12 +278,9 @@ export default function HomeScreen() {
 
           {postImage ? (
             <Image
-              source={{ uri: postImage }}
+              source={{ uri: imageUri || 'https://storage.googleapis.com/a1aa/image/67c7c8ae-8b93-420a-1a52-62d4ef5fc981.jpg' }}
               style={styles.postImage}
               resizeMode="cover"
-              onError={(e) => {
-                console.log("Error loading post image:", e.nativeEvent.error);
-              }}
             />
           ) : null}
 
@@ -289,6 +295,7 @@ export default function HomeScreen() {
               liked={!!likedPosts[item.id]}
               likeCount={item.likes || 0}
               onToggleLike={() => handleToggleLike(item.id)}
+              isDark={isDark}
             />
             <TouchableOpacity 
               style={styles.actionBtn} 
@@ -321,22 +328,11 @@ export default function HomeScreen() {
       
       <FlatList
         data={posts}
-        keyExtractor={item => item.id || Math.random().toString()}
+        keyExtractor={(item) => item.id ? String(item.id) : (item.createdAt ? String(item.createdAt) : Math.random().toString())}
         renderItem={renderItem}
-        contentContainerStyle={[
-          styles.container,
-          isDark && styles.containerDark
-        ]}
+        contentContainerStyle={styles.container}
         onEndReached={() => !realtimeEnabled && loadMorePosts()}
         onEndReachedThreshold={0.2}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#22c55e']}
-            tintColor={isDark ? '#fff' : '#000'}
-          />
-        }
         ListHeaderComponent={
           <>
             <View style={[styles.header, isDark && styles.headerDark]}>
@@ -367,6 +363,12 @@ export default function HomeScreen() {
                   <Text style={{ color: '#fff', fontSize: 12 }}>
                     {realtimeEnabled ? 'Realtime' : 'Manual'}
                   </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={{ marginRight: 10 }}
+                  onPress={() => navigation.navigate('Settings')}
+                >
+                  <Text style={[styles.headerIcon, isDark && styles.headerIconDark]}>⚙️</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleProfilePress}>
                   <Text style={[styles.headerIcon, isDark && styles.headerIconDark]}>›</Text>

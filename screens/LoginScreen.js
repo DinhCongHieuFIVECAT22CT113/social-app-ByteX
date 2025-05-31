@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, useColorScheme } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Image, useColorScheme, Alert } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import { register, login } from '../services/AuthService';
@@ -46,7 +46,7 @@ export default function ByteXLogin() {
         {/* Logo Section */}
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 24 }}>
           <Image
-            source={require('../assets/logobytex-1.png')}
+            source={require('../assets/logobytex-2.png')}
             style={{ width: 160, height: 80, resizeMode: 'contain' }}
           />
         </View>
@@ -66,6 +66,7 @@ export default function ByteXLogin() {
             />
           </View>
           <View>
+            <Text style={styles.label}>Mật khẩu</Text>
             <TextInput
               style={[styles.input, isDark ? styles.inputDark : styles.inputLight]}
               value={password}
@@ -78,7 +79,7 @@ export default function ByteXLogin() {
             />
           </View>
           {error ? <Text style={{ color: 'red', marginBottom: 8 }}>{error}</Text> : null}
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => Alert.alert('Thông báo', 'Tính năng quên mật khẩu sẽ sớm có!')}>
             <Text style={styles.forgotText}>Quên Mật Khẩu ?</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -97,6 +98,7 @@ export default function ByteXLogin() {
         <TouchableOpacity
           style={[styles.googleBtn, { borderColor: isDark ? '#374151' : '#d1d5db' }]}
           activeOpacity={0.7}
+          onPress={() => Alert.alert('Thông báo', 'Tính năng đăng nhập Google sẽ sớm có!')}
         >
           <Image
             source={{ uri: 'https://placehold.co/20x20/png?text=G' }}
@@ -104,7 +106,7 @@ export default function ByteXLogin() {
           />
           <Text style={[styles.googleText, { color: isDark ? '#fff' : '#000' }]}>Đăng Nhập với Google</Text>
         </TouchableOpacity>
-        <Text style={[styles.registerRow, { color: isDark ? '#6b7280' : '#9ca3af' }]}>Chưa Có Tài Khoản
+        <Text style={[styles.registerRow, { color: isDark ? '#6b7280' : '#9ca3af' }]}>Chưa Có Tài Khoản{' '}
           <Text style={styles.registerLink} onPress={() => navigation.replace('Register')}>Đăng Ký</Text>
         </Text>
       </View>

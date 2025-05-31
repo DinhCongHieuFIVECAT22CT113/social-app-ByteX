@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Image, Vibration } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, Image, Vibration, FlatList, ActivityIndicator } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { useColorScheme } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import {
   faArrowLeft,
   faUserFriends,
@@ -14,19 +16,25 @@ import {
   faThumbsUp,
   faCommentDots,
 } from '@fortawesome/free-solid-svg-icons';
-import { addLike, getLikes, addComment, getComments } from '../services/CommentService';
+import { addComment, getComments } from '../services/CommentService';
 import * as ImagePicker from 'expo-image-picker';
 import ImageService from '../services/ImageService';
-import { addPost } from '../services/PostService';
+import { addPost, getPostById } from '../services/PostService';
 import { auth } from '../config/firebaseConfig';
 import styles from '../styles/PostScreenStyles';
-import LikeButton from '../components/LikeButton';
-import { likePost, unlikePost, hasUserLiked } from '../services/PostInteractionService';
+// import LikeButton from '../components/LikeButton';
+import { likePost, unlikePost, hasUserLiked, getLikes, listenLikes } from '../services/PostInteractionService';
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 
 // PostScreen.js
 // Màn hình chi tiết bài viết, cho phép like, comment, hiển thị thông tin bài viết
 
-export default function PostScreen({ route, navigation }) {
+export default function PostScreen({ route }) {
+  const navigation = useNavigation();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  
   // Lấy postId từ route.params
   const postId = route?.params?.postId || 'testPostId';
   // Lấy userId từ Firebase Auth
@@ -43,9 +51,33 @@ export default function PostScreen({ route, navigation }) {
   const [commentText, setCommentText] = useState('');
   const [likes, setLikes] = useState([]);
   const [comments, setComments] = useState([]);
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [liked, setLiked] = useState(false);
+  // Thêm khai báo useState cho caption và image
   const [caption, setCaption] = useState('');
   const [image, setImage] = useState(null);
-  const [liked, setLiked] = useState(false);
+  
+  // Lấy thông tin bài viết
+  useEffect(() => {
+    const fetchPostData = async () => {
+      if (postId === 'testPostId') {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const postData = await getPostById(postId);
+        setPost(postData);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching post:", error);
+        setLoading(false);
+      }
+    };
+    
+    fetchPostData();
+  }, [postId]);
 
   // Lấy danh sách like/comment khi cần
   const fetchLikes = async () => {
@@ -58,11 +90,35 @@ export default function PostScreen({ route, navigation }) {
     setComments(data);
   };
 
-  // Kiểm tra đã like chưa khi load post
+  // Kiểm tra đã like chưa khi load post và lắng nghe thay đổi likes
   useEffect(() => {
-    if (!postId || !userId) return;
-    hasUserLiked(postId, userId).then(setLiked);
-  }, [postId, userId, likes.length]);
+    if (!postId || !userId || postId === 'testPostId') return;
+    
+    // Kiểm tra trạng thái like ban đầu
+    const checkInitialLikeStatus = async () => {
+      try {
+        const hasLiked = await hasUserLiked(postId, userId);
+        setLiked(hasLiked);
+      } catch (error) {
+        console.error("Error checking initial like status:", error);
+      }
+    };
+    
+    checkInitialLikeStatus();
+    
+    // Lắng nghe thay đổi likes realtime
+    const unsubscribe = listenLikes(postId, (newLikes) => {
+      setLikes(newLikes);
+      // Kiểm tra lại trạng thái like của user hiện tại
+      const userLiked = newLikes.some(like => like.userId === userId);
+      setLiked(userLiked);
+    });
+    
+    // Lấy lại danh sách bình luận
+    fetchComments();
+    
+    return () => unsubscribe();
+  }, [postId, userId]);
 
   // Gọi khi bấm Like
   const handleToggleLike = async () => {
@@ -70,23 +126,26 @@ export default function PostScreen({ route, navigation }) {
       Alert.alert('Lỗi', 'Bạn cần đăng nhập để thích bài viết!');
       return;
     }
+    
     try {
+      Vibration.vibrate(100); // Rung khi nhấn like
+      
       if (liked) {
         await unlikePost(postId, userId);
       } else {
         await likePost(postId, userId);
       }
-      const newLikes = await getLikes(postId);
-      setLikes(newLikes);
-      setLiked(!liked);
-      Vibration.vibrate(100);
+      
+      // Không cần gọi getLikes và setLiked ở đây nữa
+      // vì đã có listener realtime ở trên sẽ tự cập nhật
     } catch (error) {
+      console.error("Error toggling like:", error);
       Alert.alert('Lỗi', 'Không thể cập nhật like.');
     }
   };
 
   // Gọi khi gửi comment
-  const handleComment = async () => {
+  const handleAddComment = async () => {
     try {
       if (!commentText.trim()) {
         Alert.alert('Lỗi', 'Vui lòng nhập nội dung bình luận!');
@@ -100,6 +159,9 @@ export default function PostScreen({ route, navigation }) {
       
       // Lấy thông tin người dùng hiện tại
       const user = auth.currentUser;
+      
+      // Hiệu ứng rung nhẹ khi gửi comment
+      Vibration.vibrate(50);
       
       await addComment(postId, { 
         userId, 
@@ -183,23 +245,61 @@ export default function PostScreen({ route, navigation }) {
     }
   };
 
-  // Có thể fetch dữ liệu khi mount component (tùy ý)
-  React.useEffect(() => {
-    fetchLikes();
-    fetchComments();
-  }, []);
+  // Hiển thị loading khi đang tải dữ liệu
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#22c55e" />
+        <Text style={{ marginTop: 10, color: isDark ? '#fff' : '#000' }}>Đang tải bài viết...</Text>
+      </View>
+    );
+  }
+  
+  // Hiển thị thông báo nếu không tìm thấy bài viết
+  if (!post && postId !== 'testPostId') {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <Text style={{ fontSize: 18, color: isDark ? '#fff' : '#000', textAlign: 'center' }}>
+          Không tìm thấy bài viết hoặc bài viết đã bị xóa
+        </Text>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.backButtonText}>Quay lại</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Định dạng thời gian đăng bài
+  const formatPostTime = (timestamp) => {
+    if (!timestamp) return '';
+    try {
+      return formatDistanceToNow(new Date(timestamp), { 
+        addSuffix: true,
+        locale: vi
+      });
+    } catch (error) {
+      return '';
+    }
+  };
 
   return (
-    <ScrollView style={styles.root}>
+    <ScrollView style={[styles.container, isDark ? styles.containerDark : styles.containerLight]}>
       {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.headerBtn} onPress={() => navigation.goBack()}>
-          <FontAwesomeIcon icon={faArrowLeft} size={16} color="white" />
+          <FontAwesomeIcon icon={faArrowLeft} size={16} color={isDark ? '#fff' : '#000'} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Tạo bài viết</Text>
-        <TouchableOpacity style={styles.headerPostBtn} onPress={handlePost}>
-          <Text style={styles.headerPostBtnText}>Đăng bài</Text>
-        </TouchableOpacity>
+        <Text style={[styles.headerTitle, isDark && styles.headerTitleDark]}>
+          {postId === 'testPostId' ? 'Tạo bài viết' : 'Chi tiết bài viết'}
+        </Text>
+        {postId === 'testPostId' && (
+          <TouchableOpacity style={styles.headerPostBtn} onPress={handlePost}>
+            <Text style={styles.headerPostBtnText}>Đăng bài</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.divider} />
@@ -273,41 +373,62 @@ export default function PostScreen({ route, navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* Like & Comment section */}
-      <View style={styles.likeCommentRow}>
-        <LikeButton
-          postId={postId}
-          userId={userId}
-          liked={liked}
-          likeCount={likes.length}
-          onToggleLike={handleToggleLike}
-        />
-        <FontAwesomeIcon icon={faCommentDots} size={18} color="#22c55e" style={styles.commentIcon} />
-        <Text style={styles.commentText}>{comments.length} Comment</Text>
-      </View>
-
-      {/* Comment input */}
-      <View style={styles.commentInputRow}>
-        <TextInput
-          value={commentText}
-          onChangeText={setCommentText}
-          placeholder="Nhập bình luận..."
-          style={styles.commentInput}
-        />
-        <TouchableOpacity onPress={handleComment} style={styles.sendBtn}>
-          <Text style={styles.sendBtnText}>Gửi</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Danh sách comment */}
-      <View>
-        {comments.map((cmt, idx) => (
-          <View key={idx} style={styles.commentItem}>
-            <Text style={styles.commentUser}>{cmt.userId}</Text>
-            <Text style={styles.commentContent}>{cmt.text}</Text>
+      {/* Khu vực bình luận */}
+      {postId !== 'testPostId' && (
+        <View style={styles.commentsSection}>
+          <Text style={[styles.commentsSectionTitle, isDark && styles.commentsSectionTitleDark]}>
+            Bình luận ({comments.length})
+          </Text>
+          
+          {comments.length > 0 ? (
+            comments.map((comment, index) => (
+              <View key={comment.id || index} style={[styles.commentItem, isDark && styles.commentItemDark]}>
+                <View style={styles.commentHeader}>
+                  <Image 
+                    source={{ 
+                      uri: comment.avatar || 'https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg' 
+                    }} 
+                    style={styles.commentAvatar} 
+                  />
+                  <View style={styles.commentInfo}>
+                    <Text style={[styles.commentUser, isDark && styles.commentUserDark]}>
+                      {comment.displayName || 'Người dùng ByteX'}
+                    </Text>
+                    <Text style={[styles.commentContent, isDark && styles.commentContentDark]}>
+                      {comment.text}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={[styles.noCommentsText, isDark && styles.noCommentsTextDark]}>
+              Chưa có bình luận nào. Hãy là người đầu tiên bình luận!
+            </Text>
+          )}
+          
+          {/* Form nhập bình luận */}
+          <View style={styles.commentInputContainer}>
+            <TextInput
+              style={[styles.commentInput, isDark && styles.commentInputDark]}
+              placeholder="Viết bình luận..."
+              placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}
+              value={commentText}
+              onChangeText={setCommentText}
+              multiline
+            />
+            <TouchableOpacity 
+              style={[styles.sendBtn, !commentText.trim() && styles.sendBtnDisabled]}
+              onPress={handleAddComment}
+              disabled={!commentText.trim()}
+            >
+              <Text style={styles.sendBtnText}>Gửi</Text>
+            </TouchableOpacity>
           </View>
-        ))}
-      </View>
+        </View>
+      )}
+
+
     </ScrollView>
   );
 }

@@ -29,6 +29,12 @@ export default function ByteXRegister() {
     }
     try {
       await register(email, password, username);
+      setUsername('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      // Thông báo đăng ký thành công
+      alert('Đăng ký thành công! Vui lòng đăng nhập.');
       navigation.replace('Login');
     } catch (e) {
       setError('Email đã tồn tại hoặc có lỗi!');
@@ -48,9 +54,8 @@ export default function ByteXRegister() {
           <Text style={{ color: '#fff', fontSize: 20 }}>←</Text>
         </TouchableOpacity>
         <Image
-          source={require('../assets/logobytex-1.png')}
+          source={require('../assets/logobytex-2.png')}
           style={styles.logo}
-          accessibilityLabel="BYTE X logo"
         />
         <Text style={[
           styles.subtitle,
@@ -123,7 +128,7 @@ export default function ByteXRegister() {
         <TouchableOpacity style={[
           styles.googleBtn,
           isDark ? styles.googleBtnDark : styles.googleBtnLight
-        ]}>
+        ]} onPress={() => alert('Tính năng Google sẽ sớm có!')}>
           <Image
             source={{ uri: 'https://storage.googleapis.com/a1aa/image/1c2726f5-44c4-4523-0dcb-575a4e12b488.jpg' }}
             style={styles.googleLogo}
@@ -138,7 +143,7 @@ export default function ByteXRegister() {
           styles.registerRow,
           isDark ? styles.registerRowDark : styles.registerRowLight
         ]}>
-          Đã Có Tài Khoản
+          Đã Có Tài Khoản{' '}
           <Text style={styles.registerLink} onPress={() => navigation.replace('Login')}>Đăng Nhập</Text>
         </Text>
       </ScrollView>

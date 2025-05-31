@@ -46,9 +46,15 @@ export async function likePost(postId, userId) {
       try {
         // Cập nhật số lượng like trong document post (tăng 1)
         const postRef = doc(db, 'posts', postId);
-        await updateDoc(postRef, {
-          likes: increment(1)
-        });
+        // Kiểm tra xem document có tồn tại không trước khi cập nhật
+        const postSnap = await getDoc(postRef);
+        if (postSnap.exists()) {
+          await updateDoc(postRef, {
+            likes: increment(1)
+          });
+        } else {
+          console.error("Post document does not exist:", postId);
+        }
       } catch (updateError) {
         // Nếu cập nhật số lượng like thất bại, chỉ log lỗi, không throw vì like đã được thêm thành công
         console.error("Error updating like count:", updateError);
@@ -79,9 +85,15 @@ export async function unlikePost(postId, userId) {
       await deleteDoc(doc(db, 'posts', postId, 'likes', likeDoc.id));
       // Cập nhật số lượng like trong document post (giảm 1)
       const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        likes: increment(-1)
-      });
+      // Kiểm tra xem document có tồn tại không trước khi cập nhật
+      const postSnap = await getDoc(postRef);
+      if (postSnap.exists()) {
+        await updateDoc(postRef, {
+          likes: increment(-1)
+        });
+      } else {
+        console.error("Post document does not exist:", postId);
+      }
       return true;
     }
     // Nếu không tìm thấy like, trả về false
@@ -168,6 +180,29 @@ export async function getComments(postId) {
     // Ghi log lỗi nếu có vấn đề khi lấy danh sách comment
     console.error("Error getting comments:", error);
     return [];
+  }
+}
+
+// Lắng nghe likes realtime của một bài viết
+export function listenLikes(postId, callback) {
+  try {
+    // Lắng nghe realtime subcollection 'likes' của post
+    const likesRef = collection(db, 'posts', postId, 'likes');
+    const q = query(likesRef, orderBy('createdAt', 'desc'));
+    
+    return onSnapshot(q, (snapshot) => {
+      // Khi có thay đổi, trả về danh sách likes mới nhất
+      const likes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(likes);
+    }, (error) => {
+      // Ghi log lỗi nếu có vấn đề khi lắng nghe
+      console.error("Error listening to likes:", error);
+      callback([]);
+    });
+  } catch (error) {
+    // Ghi log lỗi nếu không thể thiết lập listener
+    console.error("Error setting up likes listener:", error);
+    return () => {};
   }
 }
 

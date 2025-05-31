@@ -4,16 +4,19 @@
 
 import React from 'react';
 import { TouchableOpacity, Text, Vibration } from 'react-native';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 
 /**
- * LikeButton component
+ * Component Nút Like
  * @param {string} postId - ID bài viết
  * @param {string} userId - ID người dùng
  * @param {boolean} liked - Đã like chưa
  * @param {number} likeCount - Số lượt like
- * @param {function} onToggleLike - Callback khi nhấn like/unlike
+ * @param {function} onToggleLike - Hàm callback khi nhấn like/bỏ like
+ * @param {boolean} isDark - Chế độ tối
  */
-function LikeButton({ postId, userId, liked, likeCount, onToggleLike }) {
+function LikeButton({ postId, userId, liked, likeCount, onToggleLike, isDark = false }) {
   // Xử lý khi nhấn nút Like
   const handleLike = async () => {
     if (!userId) return; // Yêu cầu đăng nhập
@@ -25,17 +28,34 @@ function LikeButton({ postId, userId, liked, likeCount, onToggleLike }) {
     }
   };
 
+  // Đảm bảo likeCount luôn là số
+  const displayCount = typeof likeCount === 'number' ? likeCount : 
+                      (Array.isArray(likeCount) ? likeCount.length : 0);
+                      
   return (
     <TouchableOpacity
       onPress={handleLike}
-      style={{ flexDirection: 'row', alignItems: 'center', padding: 8 }}
+      style={{ 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        padding: 8,
+        backgroundColor: liked ? 'rgba(225, 29, 72, 0.1)' : 'transparent',
+        borderRadius: 8,
+      }}
       accessibilityLabel={liked ? 'Bỏ thích bài viết' : 'Thích bài viết'}
     >
-      <Text style={{ fontSize: 18, color: liked ? '#e11d48' : '#2563eb', fontWeight: 'bold' }}>
-        {liked ? '❤️' : '🤍'}
-      </Text>
-      <Text style={{ marginLeft: 6, fontSize: 16, color: liked ? '#e11d48' : '#111827' }}>
-        {likeCount} Like
+      <FontAwesomeIcon 
+        icon={faThumbsUp} 
+        size={18} 
+        color={liked ? '#e11d48' : isDark ? '#fff' : '#111827'} 
+      />
+      <Text style={{ 
+        marginLeft: 6, 
+        fontSize: 16, 
+        color: liked ? '#e11d48' : isDark ? '#f3f4f6' : '#111827',
+        fontWeight: liked ? '600' : 'normal'
+      }}>
+        {displayCount} {liked ? 'Đã thích' : 'Thích'}
       </Text>
     </TouchableOpacity>
   );

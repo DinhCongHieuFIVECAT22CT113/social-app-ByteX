@@ -118,7 +118,7 @@ export default function UpdateUserScreen({ navigation, route }) {
         throw new Error('Không tìm thấy thông tin người dùng');
       }
       
-      // Nếu avatar là local file (có dạng file://), upload lên Firebase Storage
+      // Nếu avatar là local file (có dạng file://), upload lên Supabase Storage
       if (avatar && avatar.startsWith('file')) {
         photoURL = await ImageService.uploadImageAsync(avatar, `avatars/${currentUser.uid}.jpg`);
       }
@@ -146,12 +146,18 @@ export default function UpdateUserScreen({ navigation, route }) {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}> 
         <ActivityIndicator size="large" color="#22c55e" />
         <Text style={{ marginTop: 10, color: isDark ? '#fff' : '#000' }}>Đang tải thông tin...</Text>
       </View>
     );
   }
+
+  // Fallback ảnh mặc định nếu avatar lỗi
+  const handleAvatarError = () => {
+    setAvatar('https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg');
+    setError('Không thể tải ảnh avatar. Đã dùng ảnh mặc định.');
+  };
 
   return (
     <ScrollView 
@@ -185,13 +191,11 @@ export default function UpdateUserScreen({ navigation, route }) {
             <Image 
               source={{ uri: avatar }} 
               style={styles.avatarImg} 
-              onError={() => {
-                setAvatar('https://storage.googleapis.com/a1aa/image/e816601d-411b-4b99-9acc-6a92ee01e37a.jpg');
-                setError('Không thể tải ảnh avatar. Đã dùng ảnh mặc định.');
-              }}
+              onError={handleAvatarError}
             />
-          ) : (
-            <View style={[styles.avatarImg, { backgroundColor: '#d1d5db', justifyContent: 'center', alignItems: 'center' }]}>
+          ) : null}
+          {!avatar && (
+            <View style={[styles.avatarImg, { backgroundColor: '#d1d5db', justifyContent: 'center', alignItems: 'center' }]}> 
               <Text style={{ fontSize: 40, color: '#6b7280' }}>?</Text>
             </View>
           )}
@@ -248,9 +252,9 @@ export default function UpdateUserScreen({ navigation, route }) {
         ) : null}
         
         <TouchableOpacity 
-          style={[styles.saveBtn, saving && styles.saveBtnDisabled]} 
+          style={[styles.saveBtn, (saving || loading) && styles.saveBtnDisabled]} 
           onPress={handleSave} 
-          disabled={saving}
+          disabled={saving || loading}
         >
           {saving ? (
             <ActivityIndicator size="small" color="#fff" />

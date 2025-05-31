@@ -1,10 +1,17 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 export default StyleSheet.create({
-  root: {
-    backgroundColor: '#fff',
+  container: {
     flex: 1,
     padding: 16,
+  },
+  containerDark: {
+    backgroundColor: '#121212',
+  },
+  containerLight: {
+    backgroundColor: '#fff',
   },
   headerRow: {
     flexDirection: 'row',
@@ -21,10 +28,14 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 16,
-    fontWeight: '400',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#000',
     marginLeft: 8,
+    flex: 1,
+  },
+  headerTitleDark: {
+    color: '#fff',
   },
   headerPostBtn: {
     marginLeft: 'auto',
@@ -42,6 +53,9 @@ export default StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: 'rgba(0,0,0,0.3)',
     marginBottom: 16,
+  },
+  dividerDark: {
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   userRow: {
     flexDirection: 'row',
@@ -171,16 +185,210 @@ export default StyleSheet.create({
     fontSize: 14,
   },
   commentItem: {
-    marginBottom: 8,
-    padding: 8,
+    marginBottom: 12,
+    padding: 12,
     backgroundColor: '#f3f4f6',
-    borderRadius: 8,
+    borderRadius: 12,
+  },
+  commentItemDark: {
+    backgroundColor: '#1f1f1f',
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  commentAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+  },
+  commentInfo: {
+    flex: 1,
   },
   commentUser: {
     fontWeight: '600',
-    marginBottom: 2,
+    marginBottom: 4,
+    color: '#111827',
+  },
+  commentUserDark: {
+    color: '#f3f4f6',
   },
   commentContent: {
-    color: '#000',
+    color: '#374151',
+    lineHeight: 20,
+  },
+  commentContentDark: {
+    color: '#d1d5db',
+  },
+  commentsSection: {
+    marginTop: 16,
+  },
+  commentsSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#111827',
+  },
+  commentsSectionTitleDark: {
+    color: '#f3f4f6',
+  },
+  noCommentsText: {
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#6b7280',
+    fontStyle: 'italic',
+  },
+  noCommentsTextDark: {
+    color: '#9ca3af',
+  },
+  commentInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  commentInput: {
+    flex: 1,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 8,
+    color: '#111827',
+  },
+  commentInputDark: {
+    backgroundColor: '#1f1f1f',
+    color: '#f3f4f6',
+  },
+  sendBtnDisabled: {
+    opacity: 0.5,
+  },
+  
+  // Estilos para la vista de detalle de post
+  postDetailContainer: {
+    marginBottom: 16,
+  },
+  authorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  authorAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
+    borderWidth: 2,
+    borderColor: '#22c55e',
+  },
+  authorInfo: {
+    flex: 1,
+  },
+  authorName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  authorNameDark: {
+    color: '#f3f4f6',
+  },
+  postTime: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  postContent: {
+    fontSize: 16,
+    color: '#111827',
+    marginBottom: 12,
+    lineHeight: 22,
+  },
+  postContentDark: {
+    color: '#f3f4f6',
+  },
+  postImage: {
+    width: '100%',
+    height: width * 0.8,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statText: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginLeft: 6,
+  },
+  statTextDark: {
+    color: '#9ca3af',
+  },
+  interactionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 8,
+  },
+  interactionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  interactionBtnActive: {
+    backgroundColor: 'rgba(225, 29, 72, 0.1)',
+  },
+  interactionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#111827',
+    marginLeft: 8,
+  },
+  interactionTextDark: {
+    color: '#f3f4f6',
+  },
+  interactionTextActive: {
+    color: '#e11d48',
+  },
+  backButton: {
+    backgroundColor: '#22c55e',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  backButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  userNameDark: {
+    color: '#f3f4f6',
+  },
+  userOptionBtnDark: {
+    backgroundColor: '#1f1f1f',
+  },
+  userOptionTextDark: {
+    color: '#f3f4f6',
+  },
+  userTimeBtnDark: {
+    backgroundColor: '#1f1f1f',
+  },
+  userTimeTextDark: {
+    color: '#f3f4f6',
+  },
+  postInputDark: {
+    color: '#f3f4f6',
+    backgroundColor: '#1f1f1f',
+  },
+  actionTextDark: {
+    color: '#fff',
   },
 });

@@ -10,7 +10,7 @@ import { auth } from '../config/firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import { uploadImageAsync } from '../services/ImageService';
+import ImageService from '../services/ImageService';
 import { updateUserProfile, updateUserFirestore } from '../services/UserService';
 import { likePost } from '../services/PostInteractionService';
 
@@ -108,8 +108,8 @@ async function handleChangeAvatar() {
     // Lấy user hiện tại từ Firebase Auth
     const user = auth.currentUser;
     if (!user) throw new Error('No user logged in');
-    // 2. Upload ảnh lên Firebase Storage
-    const photoURL = await uploadImageAsync(uri, `avatars/${user.uid}.jpg`);
+    // 2. Upload ảnh lên Supabase Storage
+    const photoURL = await ImageService.uploadImageAsync(uri, `avatars/${user.uid}.jpg`);
     // 3. Cập nhật avatar trên Auth và Firestore
     await updateUserProfile({ displayName: user.displayName, photoURL });
     await updateUserFirestore(user.uid, { avatar: photoURL });
@@ -180,9 +180,11 @@ export default function FeedScreen() {
   // Giao diện hiển thị danh sách bài viết
   return (
     <View style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }}>
+      {/* Tiêu đề chào mừng, hiển thị chế độ sáng/tối */}
       <Text style={{ color: colorScheme === 'dark' ? '#fff' : '#000' }}>
         Hello, {colorScheme} mode!
       </Text>
+      {/* Danh sách bài viết sử dụng FlatList */}
       <FlatList
         data={posts}
         renderItem={({ item }) => <></>} // TODO: Thay thế bằng component hiển thị bài viết

@@ -1,35 +1,94 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, ScrollView, useColorScheme, TextInput } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, TextInput, Alert, Vibration } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useColorScheme } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faThumbsUp, faComment, faShare } from '@fortawesome/free-solid-svg-icons';
 import styles from '../styles/CommentsScreenStyles';
 import { getComments, addComment, listenComments } from '../services/CommentService';
+import { likePost, unlikePost, hasUserLiked, getLikes, listenLikes } from '../services/PostInteractionService';
+import { getPostById } from '../services/PostService';
 import { auth } from '../config/firebaseConfig';
+// import LikeButton from '../components/LikeButton';
 
 export default function CommentsScreen({ route }) {
   const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const postId = route?.params?.postId;
+  const [post, setPost] = useState(null); // Thông tin bài viết
   const [comments, setComments] = useState([]); // Danh sách bình luận của bài viết
   const [commentText, setCommentText] = useState(''); // Nội dung bình luận người dùng nhập
   const [error, setError] = useState(''); // Thông báo lỗi (nếu có)
+  const [likes, setLikes] = useState([]); // Danh sách like của bài viết
+  const [liked, setLiked] = useState(false); // Trạng thái đã like hay chưa
+  const [currentUser, setCurrentUser] = useState(null); // Thông tin người dùng hiện tại
 
+  // Lấy thông tin người dùng hiện tại
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setCurrentUser({
+        uid: user.uid,
+        displayName: user.displayName || 'Người dùng ByteX',
+        email: user.email || '',
+        photoURL: user.photoURL
+      });
+    }
+  }, []);
+
+  // Lấy thông tin bài viết
+  useEffect(() => {
+    if (!postId) return;
+    
+    const fetchPostData = async () => {
+      try {
+        const postData = await getPostById(postId);
+        setPost(postData);
+      } catch (error) {
+        console.error("Error fetching post:", error);
+        setError('Không thể tải thông tin bài viết');
+      }
+    };
+    
+    fetchPostData();
+  }, [postId]);
+
+  // Lắng nghe comment realtime
   useEffect(() => {
     if (!postId) return;
     setError('');
-    // Lắng nghe comment realtime
+    
     const unsubscribe = listenComments(
       postId,
       (data) => setComments(data),
       (err) => {
-        if (err.code === 'unavailable') setError('Không có kết nối mạng!');
-        else setError('Lỗi khi tải bình luận!');
+        if (err && err.code === 'unavailable') setError('Không có kết nối mạng!');
+        else if (err) setError('Lỗi khi tải bình luận!');
       }
     );
+    
     return () => unsubscribe && unsubscribe();
   }, [postId]);
+  
+  // Lắng nghe likes realtime
+  useEffect(() => {
+    if (!postId) return;
+    
+    const unsubscribe = listenLikes(
+      postId,
+      (data) => {
+        setLikes(data);
+        // Kiểm tra xem người dùng hiện tại đã like chưa
+        if (currentUser) {
+          const userLiked = data.some(like => like.userId === currentUser.uid);
+          setLiked(userLiked);
+        }
+      }
+    );
+    
+    return () => unsubscribe && unsubscribe();
+  }, [postId, currentUser]);
 
   const handleAddComment = async () => {
     if (!commentText.trim()) return;
@@ -44,11 +103,36 @@ export default function CommentsScreen({ route }) {
         userId: user.uid, 
         text: commentText,
         displayName: user.displayName || 'Người dùng ByteX',
-        avatar: user.photoURL
+        avatar: user.photoURL || null,
+        createdAt: Date.now()
       });
       setCommentText('');
     } catch (e) {
+      console.error("Error adding comment:", e);
       setError('Không thể gửi bình luận.');
+    }
+  };
+  
+  // Xử lý like/unlike
+  const handleToggleLike = async () => {
+    if (!currentUser) {
+      Alert.alert('Lỗi', 'Bạn cần đăng nhập để thích bài viết!');
+      return;
+    }
+    
+    try {
+      Vibration.vibrate(100); // Rung khi nhấn like
+      
+      if (liked) {
+        await unlikePost(postId, currentUser.uid);
+      } else {
+        await likePost(postId, currentUser.uid);
+      }
+      
+      // Không cần cập nhật state vì đã có listener realtime
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      Alert.alert('Lỗi', 'Không thể cập nhật like.');
     }
   };
 
@@ -83,25 +167,45 @@ export default function CommentsScreen({ route }) {
         {/* Likes, comments, shares */}
         <View style={styles.statsRow}>
           <View style={styles.stat}>
-            <Text style={isDark ? styles.green400 : styles.green600}>56</Text>
+            <Text style={isDark ? styles.green400 : styles.green600}>{likes.length} Lượt thích</Text>
           </View>
           <View style={[styles.stat, styles.statCenter]}>
             <Text style={isDark ? styles.gray200 : styles.black}>{comments.length} Bình luận</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={isDark ? styles.green400 : styles.green600}>56</Text>
+            <Text style={isDark ? styles.green400 : styles.green600}>{post?.shares || 0} Chia sẻ</Text>
           </View>
         </View>
         <View style={[styles.divider, isDark && styles.dividerDark]} />
         {/* Buttons */}
         <View style={styles.btnRow}>
-          <TouchableOpacity style={styles.btn}>
-            <Text style={styles.btnLabel}>Thích</Text>
+          <TouchableOpacity 
+            style={[styles.btn, liked && styles.btnActive]} 
+            onPress={handleToggleLike}
+          >
+            <FontAwesomeIcon 
+              icon={faThumbsUp} 
+              size={16} 
+              color={liked ? '#e11d48' : isDark ? '#fff' : '#000'} 
+            />
+            <Text style={[styles.btnLabel, liked && styles.btnLabelActive]}>
+              {liked ? 'Đã thích' : 'Thích'}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.btn, styles.btnWide]}>
+            <FontAwesomeIcon 
+              icon={faComment} 
+              size={16} 
+              color={isDark ? '#fff' : '#000'} 
+            />
             <Text style={styles.btnLabel}>Bình luận</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.btn}>
+            <FontAwesomeIcon 
+              icon={faShare} 
+              size={16} 
+              color={isDark ? '#fff' : '#000'} 
+            />
             <Text style={styles.btnLabel}>Chia sẻ</Text>
           </TouchableOpacity>
         </View>

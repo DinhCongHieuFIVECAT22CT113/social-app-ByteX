@@ -6,7 +6,6 @@ import { initializeApp, getApps } from "firebase/app";
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 // Cấu hình Firebase của bạn (copy từ Firebase Console)
 const firebaseConfig = {
@@ -23,11 +22,23 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 // Sử dụng initializeAuth để lưu trạng thái đăng nhập với AsyncStorage
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-});
+// Kiểm tra xem auth đã được khởi tạo chưa để tránh lỗi already-initialized
+import { getAuth } from "firebase/auth";
+
+let auth;
+try {
+  // Thử lấy auth instance hiện có
+  auth = getAuth(app);
+} catch (error) {
+  // Nếu chưa có, khởi tạo mới với persistence
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+  });
+}
+
+export { auth };
 export const db = getFirestore(app);        // Firestore database
-export const storage = getStorage(app);     // Firebase Storage (upload ảnh) nhưng đang không dùng vì chưa update tài khoản lên pro
+// Firebase Storage đã được thay thế bằng Supabase Storage
 
 // Nếu bạn không dùng Analytics thì không cần xuất nó
 // Nếu muốn dùng, bạn import getAnalytics và export ở đây luôn
